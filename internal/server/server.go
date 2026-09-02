@@ -67,9 +67,11 @@ func InitRouter(database *sql.DB) chi.Router {
 	ts := service.NewTokenService(jwtSecret, time.Minute*30)
 	ur := repository.NewUserRepository(database)
 
-	registerJandler := handler.NewRegisterHandler(ur, ts)
+	registerHandler := handler.NewRegisterHandler(ur, ts)
+	loginHandler := handler.NewLoginHandler(ur, ts)
 
-	r.Handle("/register", registerJandler)
+	r.Handle("/api/user/register", registerHandler)
+	r.Handle("/api/user/login", loginHandler)
 
 	return r
 }

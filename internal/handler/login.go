@@ -1,31 +1,31 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/logger"
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
 	"github.com/SlawaBE/go-musthave-diploma/internal/repository"
 	"github.com/SlawaBE/go-musthave-diploma/internal/service"
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/SlawaBE/go-musthave-diploma/internal/utils/hash"
 	"go.uber.org/zap"
 )
 
-type RegisterHandler struct {
+type LoginHandler struct {
 	repository   *repository.UserRepository
 	tokenService *service.TokenService
 }
 
-func NewRegisterHandler(repository *repository.UserRepository, tokenService *service.TokenService) *RegisterHandler {
-	return &RegisterHandler{
+func NewLoginHandler(repository *repository.UserRepository, tokenService *service.TokenService) *LoginHandler {
+	return &LoginHandler{
 		repository:   repository,
 		tokenService: tokenService,
 	}
 }
 
-func (h *RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 
 	if r.Method != http.MethodPost {
@@ -46,19 +46,24 @@ func (h *RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Login == "" || user.Password == "" {
+	if user.Login == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err := h.repository.CreateUser(r.Context(), user)
+	dbUser, err := h.repository.GetUser(r.Context(), user.Login)
 
 	if err != nil {
-		if IsNotUniqError(err) {
-			w.WriteHeader(http.StatusConflict)
-			return
+		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
 		}
-		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if !hash.CheckPassword(user.Password, dbUser.Password) {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
@@ -78,9 +83,4 @@ func (h *RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   1800, //TODO конфигурировать таким же значением как TokenService.tokenLifetime (30 минут)
 	})
 	w.WriteHeader(http.StatusOK)
-}
-
-func IsNotUniqError(err error) bool {
-	var pgErr *pgconn.PgError
-	return errors.As(err, &pgErr) && pgErr.Code == "23505"
 }
