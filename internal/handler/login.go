@@ -38,20 +38,20 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user model.User
+	var request model.LoginUserRequest
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&user); err != nil {
+	if err := decoder.Decode(&request); err != nil {
 		logger.Log.Error("cannot decode request JSON body", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	if user.Login == "" {
+	if request.Login == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	dbUser, err := h.repository.GetUser(r.Context(), user.Login)
+	dbUser, err := h.repository.GetUserByLogin(r.Context(), request.Login)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -62,12 +62,12 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !hash.CheckPassword(user.Password, dbUser.Password) {
+	if !hash.CheckPassword(request.Password, dbUser.PasswordHash) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	jwtToken, err := h.tokenService.BuildJWTString(user.Login)
+	jwtToken, err := h.tokenService.BuildJWTString(request.Login)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

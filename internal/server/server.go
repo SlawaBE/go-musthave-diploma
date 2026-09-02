@@ -63,15 +63,26 @@ func InitRouter(database *sql.DB) chi.Router {
 	r := chi.NewRouter()
 
 	jwtSecret := rand.Text()
-	logger.Log.Info("JWT secret: " + jwtSecret)
+	logger.Log.Info("JWT secret: " + jwtSecret) //TODO change to debug or delete
 	ts := service.NewTokenService(jwtSecret, time.Minute*30)
 	ur := repository.NewUserRepository(database)
+	or := repository.NewOrderRepository(database)
 
 	registerHandler := handler.NewRegisterHandler(ur, ts)
 	loginHandler := handler.NewLoginHandler(ur, ts)
+	ordersUploadHandler := handler.NewOrdersUploadHandler(or, ur)
 
-	r.Handle("/api/user/register", registerHandler)
-	r.Handle("/api/user/login", loginHandler)
+	authMiddleware := ts.CreateAuthMiddleware()
+
+	r.Route("/api/user", func(r chi.Router) {
+		r.Handle("/register", registerHandler)
+		r.Handle("/login", loginHandler)
+
+		r.Group(func(r chi.Router) {
+			r.Use(authMiddleware)
+			r.Handle("/orders", ordersUploadHandler)
+		})
+	})
 
 	return r
 }

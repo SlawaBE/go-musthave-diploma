@@ -1,7 +1,9 @@
 package service
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -24,6 +26,8 @@ func NewTokenService(secretKey string, tokenLifetime time.Duration) *TokenServic
 	}
 }
 
+const LoginContextKey = "login"
+
 func (s *TokenService) BuildJWTString(login string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -38,4 +42,55 @@ func (s *TokenService) BuildJWTString(login string) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+func (s *TokenService) ValidateJWTString(tokenString string) (*Claims, error) {
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(s.secretKey), nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("error parsing jwt token: %v", err)
+	}
+
+	if !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+
+	if claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
+		return nil, fmt.Errorf("token expired")
+	}
+
+	return claims, nil
+}
+
+func (s *TokenService) CreateAuthMiddleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			cookie, err := r.Cookie("token")
+			if err != nil {
+				http.Error(w, "Unauthorized: missing token", http.StatusUnauthorized)
+				return
+			}
+
+			claims, err := s.ValidateJWTString(cookie.Value)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), LoginContextKey, claims.Login)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func GetLoginFromContext(ctx context.Context) (string, bool) {
+	login, ok := ctx.Value(LoginContextKey).(string)
+	return login, ok
 }

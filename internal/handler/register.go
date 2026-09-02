@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
 	"github.com/SlawaBE/go-musthave-diploma/internal/repository"
 	"github.com/SlawaBE/go-musthave-diploma/internal/service"
+	"github.com/SlawaBE/go-musthave-diploma/internal/utils/hash"
 	"github.com/jackc/pgx/v5/pgconn"
 	"go.uber.org/zap"
 )
@@ -38,20 +40,23 @@ func (h *RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user model.User
+	var request model.RegisterUserRequest
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&user); err != nil {
+	if err := decoder.Decode(&request); err != nil {
 		logger.Log.Error("cannot decode request JSON body", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	if user.Login == "" || user.Password == "" {
+	if request.Login == "" || request.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err := h.repository.CreateUser(r.Context(), user)
+	err := h.repository.SaveUser(r.Context(), model.User{
+		Login:        request.Login,
+		PasswordHash: hex.EncodeToString(hash.Sha256([]byte(request.Password))),
+	})
 
 	if err != nil {
 		if IsNotUniqError(err) {
@@ -62,7 +67,7 @@ func (h *RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwtToken, err := h.tokenService.BuildJWTString(user.Login)
+	jwtToken, err := h.tokenService.BuildJWTString(request.Login)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
