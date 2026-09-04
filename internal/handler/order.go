@@ -91,6 +91,8 @@ func (h *OrdersUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 			w.WriteHeader(http.StatusConflict)
 			return
 		}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	//TODO надо создать воркеров, которые в фоне будет обрабатывать заказы
