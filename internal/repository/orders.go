@@ -26,8 +26,8 @@ const (
 	SelectSumAccrualByUserID = `SELECT coalesce(sum(accrual), 0) as total FROM orders WHERE user_id = $1;`
 )
 
-func (o *OrderRepository) SaveOrder(ctx context.Context, order model.Order) error {
-	tx, err := o.db.Begin()
+func (w *OrderRepository) SaveOrder(ctx context.Context, order model.Order) error {
+	tx, err := w.db.Begin()
 	if err != nil {
 		logger.Log.Error("error begin transaction", zap.Error(err))
 		return err
@@ -54,9 +54,9 @@ func (o *OrderRepository) SaveOrder(ctx context.Context, order model.Order) erro
 	return err
 }
 
-func (o *OrderRepository) GetOrderByNumber(ctx context.Context, number string) (*model.Order, error) {
+func (w *OrderRepository) GetOrderByNumber(ctx context.Context, number string) (*model.Order, error) {
 	var order model.Order
-	row := o.db.QueryRowContext(ctx, SelectOrderByNumber, number)
+	row := w.db.QueryRowContext(ctx, SelectOrderByNumber, number)
 	var err error
 
 	if err = row.Scan(&order.ID, &order.UserID, &order.Number, &order.Status, &order.UploadedAt, &order.Accrual); err != nil {
@@ -66,10 +66,11 @@ func (o *OrderRepository) GetOrderByNumber(ctx context.Context, number string) (
 	return &order, nil
 }
 
-func (o *OrderRepository) Orders(ctx context.Context, userID uint64) ([]model.Order, error) {
+func (w *OrderRepository) Orders(ctx context.Context, userID uint64) ([]model.Order, error) {
 	orders := make([]model.Order, 0)
-	rows, err := o.db.QueryContext(ctx, SelectOrderByUserID, userID)
+	rows, err := w.db.QueryContext(ctx, SelectOrderByUserID, userID)
 	if err != nil {
+		logger.Log.Error("error query", zap.Error(err))
 		return nil, err
 	}
 	defer rows.Close()
@@ -91,8 +92,8 @@ func (o *OrderRepository) Orders(ctx context.Context, userID uint64) ([]model.Or
 	return orders, nil
 }
 
-func (o *OrderRepository) GetSumOfAccrual(ctx context.Context, userID uint64) (*float32, error) {
-	row := o.db.QueryRowContext(ctx, SelectSumAccrualByUserID, userID)
+func (w *OrderRepository) GetSumOfAccrual(ctx context.Context, userID uint64) (*float32, error) {
+	row := w.db.QueryRowContext(ctx, SelectSumAccrualByUserID, userID)
 
 	var sum float32
 	if err := row.Scan(&sum); err != nil {

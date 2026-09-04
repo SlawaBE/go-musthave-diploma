@@ -12,10 +12,10 @@ import (
 type BalanceHandler struct {
 	repository         *repository.OrderRepository
 	userRepository     *repository.UserRepository
-	withdrawRepository *repository.WitdrawRepository
+	withdrawRepository *repository.WithdrawRepository
 }
 
-func NewBalanceHandler(repository *repository.OrderRepository, userRepository *repository.UserRepository, withdrawRepository *repository.WitdrawRepository) *BalanceHandler {
+func NewBalanceHandler(repository *repository.OrderRepository, userRepository *repository.UserRepository, withdrawRepository *repository.WithdrawRepository) *BalanceHandler {
 	return &BalanceHandler{
 		repository:         repository,
 		userRepository:     userRepository,

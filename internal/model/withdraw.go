@@ -14,3 +14,9 @@ type WithdrawRequest struct {
 	OrderNumber string  `json:"order"`
 	Total       float32 `json:"sum"`
 }
+
+type WithdrawItem struct {
+	OrderNumber string
+	Sum float32
+	ProcessedAt string
+}

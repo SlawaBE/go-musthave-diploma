@@ -76,6 +76,7 @@ func InitRouter(database *sql.DB, config config.Config) chi.Router {
 	ordersListHandler := handler.NewOrdersListHandler(or, ur)
 	balanceHandler := handler.NewBalanceHandler(or, ur, wr)
 	withdrawUploadHandler := handler.NewWitdrawUploadHandler(wr, ur, or)
+	withdrawListHandler := handler.NewWithdrawListHandler(wr, ur)
 
 	authMiddleware := ts.CreateAuthMiddleware()
 
@@ -89,6 +90,7 @@ func InitRouter(database *sql.DB, config config.Config) chi.Router {
 			r.Get("/orders", ordersListHandler.ServeHTTP)
 			r.Get("/balance", balanceHandler.ServeHTTP)
 			r.Post("/balance/withdraw", withdrawUploadHandler.ServeHTTP)
+			r.Get("/withdrawals", withdrawListHandler.ServeHTTP)
 		})
 	})
 

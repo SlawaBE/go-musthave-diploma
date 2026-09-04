@@ -14,12 +14,12 @@ import (
 )
 
 type WitdrawUploadHandler struct {
-	repository      *repository.WitdrawRepository
+	repository      *repository.WithdrawRepository
 	userRepository  *repository.UserRepository
 	orderRepository *repository.OrderRepository
 }
 
-func NewWitdrawUploadHandler(repository *repository.WitdrawRepository, userRepository *repository.UserRepository, orderRepository *repository.OrderRepository) *WitdrawUploadHandler {
+func NewWitdrawUploadHandler(repository *repository.WithdrawRepository, userRepository *repository.UserRepository, orderRepository *repository.OrderRepository) *WitdrawUploadHandler {
 	return &WitdrawUploadHandler{
 		repository:      repository,
 		userRepository:  userRepository,
