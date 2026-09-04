@@ -20,9 +20,10 @@ func NewOrderRepository(db *sql.DB) *OrderRepository {
 }
 
 const (
-	InsertOrder            = `INSERT INTO orders (user_id, number, status, accrual) VALUES ($1, $2, $3, $4);`
-	SelectOrderByNumber  = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE number = $1;`
-	SelectOrderByUserID = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE user_id = $1 ORDER BY uploaded_at DESC;`
+	InsertOrder              = `INSERT INTO orders (user_id, number, status, accrual) VALUES ($1, $2, $3, $4);`
+	SelectOrderByNumber      = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE number = $1;`
+	SelectOrderByUserID      = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE user_id = $1 ORDER BY uploaded_at DESC;`
+	SelectSumAccrualByUserID = `SELECT coalesce(sum(accrual), 0) as total FROM orders WHERE user_id = $1;`
 )
 
 func (o *OrderRepository) SaveOrder(ctx context.Context, order model.Order) error {
@@ -55,10 +56,10 @@ func (o *OrderRepository) SaveOrder(ctx context.Context, order model.Order) erro
 
 func (o *OrderRepository) GetOrderByNumber(ctx context.Context, number string) (*model.Order, error) {
 	var order model.Order
-	rows := o.db.QueryRowContext(ctx, SelectOrderByNumber, number)
+	row := o.db.QueryRowContext(ctx, SelectOrderByNumber, number)
 	var err error
 
-	if err = rows.Scan(&order.ID, &order.UserID, &order.Number, &order.Status, &order.UploadedAt, &order.Accrual); err != nil {
+	if err = row.Scan(&order.ID, &order.UserID, &order.Number, &order.Status, &order.UploadedAt, &order.Accrual); err != nil {
 		logger.Log.Error("error get order", zap.String("number", number), zap.Error(err))
 		return nil, err
 	}
@@ -88,4 +89,16 @@ func (o *OrderRepository) Orders(ctx context.Context, userID uint64) ([]model.Or
 		return nil, err
 	}
 	return orders, nil
+}
+
+func (o *OrderRepository) GetSumOfAccrual(ctx context.Context, userID uint64) (*float32, error) {
+	row := o.db.QueryRowContext(ctx, SelectSumAccrualByUserID, userID)
+
+	var sum float32
+	if err := row.Scan(&sum); err != nil {
+		logger.Log.Error("error sum accrual", zap.Uint64("userId", userID), zap.Error(err))
+		return nil, err
+	}
+
+	return &sum, nil
 }

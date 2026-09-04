@@ -68,11 +68,13 @@ func InitRouter(database *sql.DB, config config.Config) chi.Router {
 	as := service.NewAccrualService(config.AccrualSystemAddress)
 	ur := repository.NewUserRepository(database)
 	or := repository.NewOrderRepository(database)
+	wr := repository.NewWitdrawnRepository(database)
 
 	registerHandler := handler.NewRegisterHandler(ur, ts)
 	loginHandler := handler.NewLoginHandler(ur, ts)
 	ordersUploadHandler := handler.NewOrdersUploadHandler(or, ur, as)
 	ordersListHandler := handler.NewOrdersListHandler(or, ur)
+	balanceHandler := handler.NewBalanceHandler(or, ur, wr)
 
 	authMiddleware := ts.CreateAuthMiddleware()
 
@@ -84,6 +86,7 @@ func InitRouter(database *sql.DB, config config.Config) chi.Router {
 			r.Use(authMiddleware)
 			r.Post("/orders", ordersUploadHandler.ServeHTTP)
 			r.Get("/orders", ordersListHandler.ServeHTTP)
+			r.Get("/balance", balanceHandler.ServeHTTP)
 		})
 	})
 
