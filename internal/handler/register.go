@@ -58,7 +58,7 @@ func (h *RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		PasswordHash: hex.EncodeToString(hash.Sha256([]byte(request.Password))),
 	}
 
-	err := h.repository.SaveUser(r.Context(), user)
+	err := h.repository.SaveUser(r.Context(), &user)
 
 	if err != nil {
 		if IsNotUniqError(err) {

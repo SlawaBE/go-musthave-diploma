@@ -43,7 +43,7 @@ func (w *OrderRepository) SaveOrder(ctx context.Context, order model.Order) erro
 
 	_, err = stmt.ExecContext(ctx, order.UserID, order.Number, order.Status, order.Accrual)
 	if err != nil {
-		logger.Log.Error("error exec statement", zap.Error(err), zap.Any("order", order))
+		logger.Log.Error("error exec statement", zap.Error(err))
 		return err
 	}
 

@@ -24,7 +24,7 @@ const (
 	SelectUserByLogin = `SELECT id, login, password_hash FROM users WHERE login = $1;`
 )
 
-func (u *UserRepository) SaveUser(ctx context.Context, user model.User) error {
+func (u *UserRepository) SaveUser(ctx context.Context, user *model.User) error {
 	tx, err := u.db.Begin()
 	if err != nil {
 		logger.Log.Error("error begin transaction", zap.Error(err))

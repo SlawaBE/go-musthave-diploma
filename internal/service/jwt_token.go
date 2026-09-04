@@ -6,9 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/SlawaBE/go-musthave-diploma/internal/logger"
 	"github.com/golang-jwt/jwt/v4"
-	"go.uber.org/zap"
 )
 
 type TokenService struct {
@@ -78,13 +76,13 @@ func (s *TokenService) CreateAuthMiddleware() func(http.Handler) http.Handler {
 				http.Error(w, "Unauthorized: missing token", http.StatusUnauthorized)
 				return
 			}
-			fmt.Println(cookie.Value)
+
 			claims, err := s.ValidateJWTString(cookie.Value)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 				return
 			}
-			logger.Log.Info("add userID to context", zap.Uint64("user_id", claims.UserID), zap.String("test", cookie.Value)) //TODO remove
+			
 			ctx := context.WithValue(r.Context(), userIDContextKey{}, claims.UserID)
 
 			next.ServeHTTP(w, r.WithContext(ctx))

@@ -6,12 +6,14 @@ vars:
   SERVER_BINARY: cmd/gophermart/gophermart.exe
   ACCRUAL_BINARY: cmd/accrual/accrual_windows_amd64
   STATICTEST_BINARY: statictest-windows-amd64.exe
+  LOG_DIR: logs
 
 tasks:
   clean:
     desc: Clean
     cmds:
       - rm -f {{.SERVER_BINARY}}
+      - rm -rf {{.LOG_DIR}}
 
   build:
     desc: Build gophermart app
@@ -31,3 +33,10 @@ tasks:
     desc: Run statictest
     cmds:
       - go vet -vettool={{.STATICTEST_BINARY}} ./...
+  
+  autotest:
+    desc: Run autotests
+    deps: 
+      - build
+    cmds:
+      - bash ./autotest.sh

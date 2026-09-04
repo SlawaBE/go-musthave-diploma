@@ -1,0 +1,210 @@
+=== RUN   TestGophermart
+=== RUN   TestGophermart/TestEndToEnd
+=== RUN   TestGophermart/TestEndToEnd/register_accrual_mechanic
+=== RUN   TestGophermart/TestEndToEnd/register_order_for_accrual
+=== RUN   TestGophermart/TestEndToEnd/register_user
+=== RUN   TestGophermart/TestEndToEnd/order_upload
+=== RUN   TestGophermart/TestEndToEnd/await_order_processed
+    gophermart_e2e_test.go:180: 
+        	Error Trace:	D:\work\projects\go-musthave-diploma\gophermart_e2e_test.go:180
+        	            				D:\work\projects\go-musthave-diploma\suite.go:91
+        	Error:      	Received unexpected error:
+        	            	Get "http://localhost:8080/api/user/orders": context deadline exceeded
+        	Test:       	TestGophermart/TestEndToEnd/await_order_processed
+        	Messages:   	Ошибка при попытке сделать запрос на получение статуса расчета начисления в системе лояльности
+    gophermart_e2e_test.go:181: 
+        	Error Trace:	D:\work\projects\go-musthave-diploma\gophermart_e2e_test.go:181
+        	            				D:\work\projects\go-musthave-diploma\suite.go:91
+        	Error:      	[]int{200, 204} does not contain 0
+        	Test:       	TestGophermart/TestEndToEnd/await_order_processed
+        	Messages:   	Несоответствие статус кода ответа ожидаемому в хендлере 'GET http://localhost:8080/api/user/orders'
+    gophermart_e2e_test.go:184: 
+        	Error Trace:	D:\work\projects\go-musthave-diploma\gophermart_e2e_test.go:184
+        	            				D:\work\projects\go-musthave-diploma\suite.go:91
+        	Error:      	"" does not contain "application/json"
+        	Test:       	TestGophermart/TestEndToEnd/await_order_processed
+        	Messages:   	Заголовок ответа Content-Type содержит несоответствующее значение
+    gophermart_e2e_test.go:190: Оригинальный запрос:
+        
+        GET /api/user/orders HTTP/1.1
+        Host: localhost:8080
+        Cookie: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODg1NjYyODUsInVzZXJfaWQiOjM2fQ.9T1keN-raq9UruKB11b4ojef-6hquqosFvvdLfOoIgw
+        User-Agent: go-resty/2.7.0 (https://github.com/go-resty/resty)
+        
+    gophermart_e2e_test.go:166: Не удалось дождаться окончания расчета начисления
+=== RUN   TestGophermart/TestEndToEnd/check_balance
+    gophermart_e2e_test.go:231: 
+        	Error Trace:	D:\work\projects\go-musthave-diploma\gophermart_e2e_test.go:231
+        	            				D:\work\projects\go-musthave-diploma\suite.go:91
+        	Error:      	Not equal: 
+        	            	expected: main.userBalance{Current:729.98, Withdrawn:0}
+        	            	actual  : main.userBalance{Current:0, Withdrawn:0}
+        	            	
+        	            	Diff:
+        	            	--- Expected
+        	            	+++ Actual
+        	            	@@ -1,3 +1,3 @@
+        	            	 (main.userBalance) {
+        	            	- Current: (float32) 729.98,
+        	            	+ Current: (float32) 0,
+        	            	  Withdrawn: (float32) 0
+        	Test:       	TestGophermart/TestEndToEnd/check_balance
+        	Messages:   	Баланс пользователя не соответствует ожидаемому
+    gophermart_e2e_test.go:235: Оригинальный запрос:
+        
+        GET /api/user/balance HTTP/1.1
+        Host: localhost:8080
+        Cookie: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODg1NjYyODUsInVzZXJfaWQiOjM2fQ.9T1keN-raq9UruKB11b4ojef-6hquqosFvvdLfOoIgw
+        User-Agent: go-resty/2.7.0 (https://github.com/go-resty/resty)
+        
+=== RUN   TestGophermart/TestEndToEnd/withdraw_balance
+    gophermart_e2e_test.go:260: 
+        	Error Trace:	D:\work\projects\go-musthave-diploma\gophermart_e2e_test.go:260
+        	            				D:\work\projects\go-musthave-diploma\suite.go:91
+        	Error:      	Not equal: 
+        	            	expected: 200
+        	            	actual  : 402
+        	Test:       	TestGophermart/TestEndToEnd/withdraw_balance
+        	Messages:   	Несоответствие статус кода ответа ожидаемому в хендлере 'POST http://localhost:8080/api/user/balance/withdraw'
+    gophermart_e2e_test.go:266: Оригинальный запрос:
+        
+        POST /api/user/balance/withdraw HTTP/1.1
+        Host: localhost:8080
+        Accept: application/json
+        Content-Type: application/json
+        Cookie: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODg1NjYyODUsInVzZXJfaWQiOjM2fQ.9T1keN-raq9UruKB11b4ojef-6hquqosFvvdLfOoIgw
+        User-Agent: go-resty/2.7.0 (https://github.com/go-resty/resty)
+        
+        
+        {
+        			"order": "5616752712",
+            		"sum": 642.22
+        		}
+        
+=== RUN   TestGophermart/TestEndToEnd/recheck_balance
+    gophermart_e2e_test.go:289: 
+        	Error Trace:	D:\work\projects\go-musthave-diploma\gophermart_e2e_test.go:289
+        	            				D:\work\projects\go-musthave-diploma\suite.go:91
+        	Error:      	Max difference between 87.75891 and 0 allowed is 0.01, but difference was 87.7589111328125
+        	Test:       	TestGophermart/TestEndToEnd/recheck_balance
+        	Messages:   	Баланс пользователя не соответствует ожидаемому
+    gophermart_e2e_test.go:290: 
+        	Error Trace:	D:\work\projects\go-musthave-diploma\gophermart_e2e_test.go:290
+        	            				D:\work\projects\go-musthave-diploma\suite.go:91
+        	Error:      	Max difference between 642.22107 and 0 allowed is 0.01, but difference was 642.2210693359375
+        	Test:       	TestGophermart/TestEndToEnd/recheck_balance
+        	Messages:   	Списанная сумма не соответствует ожидаемой
+    gophermart_e2e_test.go:294: Оригинальный запрос:
+        
+        GET /api/user/balance HTTP/1.1
+        Host: localhost:8080
+        Cookie: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODg1NjYyODUsInVzZXJfaWQiOjM2fQ.9T1keN-raq9UruKB11b4ojef-6hquqosFvvdLfOoIgw
+        User-Agent: go-resty/2.7.0 (https://github.com/go-resty/resty)
+        
+=== RUN   TestGophermart/TestEndToEnd/check_withdrawals
+    gophermart_e2e_test.go:309: 
+        	Error Trace:	D:\work\projects\go-musthave-diploma\gophermart_e2e_test.go:309
+        	            				D:\work\projects\go-musthave-diploma\suite.go:91
+        	Error:      	Not equal: 
+        	            	expected: 200
+        	            	actual  : 204
+        	Test:       	TestGophermart/TestEndToEnd/check_withdrawals
+        	Messages:   	Несоответствие статус кода ответа ожидаемому в хендлере 'GET http://localhost:8080/api/user/withdrawals'
+    gophermart_e2e_test.go:315: Оригинальный запрос:
+        
+        GET /api/user/withdrawals HTTP/1.1
+        Host: localhost:8080
+        Accept: application/json
+        Content-Type: application/json
+        Cookie: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODg1NjYyODUsInVzZXJfaWQiOjM2fQ.9T1keN-raq9UruKB11b4ojef-6hquqosFvvdLfOoIgw
+        User-Agent: go-resty/2.7.0 (https://github.com/go-resty/resty)
+        
+=== RUN   TestGophermart/TestUserAuth
+=== RUN   TestGophermart/TestUserAuth/register_user
+=== RUN   TestGophermart/TestUserAuth/login_user
+=== RUN   TestGophermart/TestUserOrders
+=== RUN   TestGophermart/TestUserOrders/unauthorized_order_upload
+=== RUN   TestGophermart/TestUserOrders/unauthorized_orders_list
+=== RUN   TestGophermart/TestUserOrders/register_user
+=== RUN   TestGophermart/TestUserOrders/bad_order_upload
+=== RUN   TestGophermart/TestUserOrders/order_upload
+=== RUN   TestGophermart/TestUserOrders/duplicate_order_upload_same_user
+=== RUN   TestGophermart/TestUserOrders/orders_list
+=== RUN   TestGophermart/TestUserOrders/duplicate_order_upload_other_user
+=== NAME  TestGophermart
+    gophermart_suite_test.go:106: останавливаем процесс gophermart
+    gophermart_suite_test.go:128: Процесс завершился с не нулевым статусом 1
+    gophermart_suite_test.go:141: Получен STDOUT лог процесса:
+        
+        {"level":"info","time":"2026-09-05T02:28:05.227+0300","caller":"server/server.go:66","msg":"JWT secret: JIQQG5QMJ3H6B77ADI7OHHNLZO"}
+        {"level":"info","time":"2026-09-05T02:28:05.316+0300","caller":"repository/users.go:54","msg":"user saved","id":36}
+        {"level":"info","time":"2026-09-05T02:28:05.316+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/register","method":"POST","duration":0.0066254,"status":200,"size":23}
+        {"level":"info","time":"2026-09-05T02:28:05.319+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"POST","duration":0.0025481,"status":202,"size":23}
+        {"level":"info","time":"2026-09-05T02:28:06.321+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0015279,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:07.320+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005139,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:08.321+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0010209,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:09.320+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005087,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:10.321+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0010209,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:11.320+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005146,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:12.321+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0010218,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:13.321+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0010208,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:14.320+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005105,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:15.320+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005158,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:16.320+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005105,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:17.320+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005095,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:18.320+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005108,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:19.320+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005083,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:20.320+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005121,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:21.320+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005149,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:22.320+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005129,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:23.320+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005091,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:24.320+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005077,"status":200,"size":105}
+        {"level":"info","time":"2026-09-05T02:28:25.322+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/balance","method":"GET","duration":0.0015357,"status":200,"size":51}
+        {"level":"info","time":"2026-09-05T02:28:25.323+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/balance/withdraw","method":"POST","duration":0.00051,"status":402,"size":19}
+        {"level":"info","time":"2026-09-05T02:28:25.324+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/balance","method":"GET","duration":0.0005105,"status":200,"size":51}
+        {"level":"info","time":"2026-09-05T02:28:25.325+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/withdrawals","method":"GET","duration":0,"status":204,"size":0}
+        {"level":"info","time":"2026-09-05T02:28:25.329+0300","caller":"repository/users.go:54","msg":"user saved","id":37}
+        {"level":"info","time":"2026-09-05T02:28:25.329+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/register","method":"POST","duration":0.0020347,"status":200,"size":23}
+        {"level":"info","time":"2026-09-05T02:28:25.331+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/login","method":"POST","duration":0.0005075,"status":200,"size":23}
+        {"level":"info","time":"2026-09-05T02:28:25.332+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"POST","duration":0,"status":401,"size":28}
+        {"level":"info","time":"2026-09-05T02:28:25.332+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0,"status":401,"size":28}
+        {"level":"info","time":"2026-09-05T02:28:25.334+0300","caller":"repository/users.go:54","msg":"user saved","id":38}
+        {"level":"info","time":"2026-09-05T02:28:25.334+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/register","method":"POST","duration":0.0020381,"status":200,"size":23}
+        {"level":"info","time":"2026-09-05T02:28:25.334+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"POST","duration":0,"status":422,"size":41}
+        {"level":"info","time":"2026-09-05T02:28:25.336+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"POST","duration":0.002033,"status":202,"size":23}
+        {"level":"error","time":"2026-09-05T02:28:25.337+0300","caller":"repository/orders.go:46","msg":"error exec statement","error":"ERROR: duplicate key value violates unique constraint \"orders_number_unique\" (SQLSTATE 23505)","stacktrace":"github.com/SlawaBE/go-musthave-diploma/internal/repository.(*OrderRepository).SaveOrder\n\tD:/work/projects/go-musthave-diploma/internal/repository/orders.go:46\ngithub.com/SlawaBE/go-musthave-diploma/internal/handler.(*OrdersUploadHandler).ServeHTTP\n\tD:/work/projects/go-musthave-diploma/internal/handler/order.go:79\nnet/http.HandlerFunc.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:2286\ngithub.com/SlawaBE/go-musthave-diploma/internal/server.InitRouter.(*TokenService).CreateAuthMiddleware.func2.1\n\tD:/work/projects/go-musthave-diploma/internal/service/jwt_token.go:88\nnet/http.HandlerFunc.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:2286\ngithub.com/go-chi/chi.(*ChainHandler).ServeHTTP\n\tC:/Users/Stanislav/go/pkg/mod/github.com/go-chi/chi@v1.5.5/chain.go:31\ngithub.com/go-chi/chi.(*Mux).routeHTTP\n\tC:/Users/Stanislav/go/pkg/mod/github.com/go-chi/chi@v1.5.5/mux.go:436\nnet/http.HandlerFunc.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:2286\ngithub.com/go-chi/chi.(*Mux).ServeHTTP\n\tC:/Users/Stanislav/go/pkg/mod/github.com/go-chi/chi@v1.5.5/mux.go:70\ngithub.com/go-chi/chi.(*Mux).Mount.func1\n\tC:/Users/Stanislav/go/pkg/mod/github.com/go-chi/chi@v1.5.5/mux.go:311\nnet/http.HandlerFunc.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:2286\ngithub.com/go-chi/chi.(*Mux).routeHTTP\n\tC:/Users/Stanislav/go/pkg/mod/github.com/go-chi/chi@v1.5.5/mux.go:436\nnet/http.HandlerFunc.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:2286\ngithub.com/go-chi/chi.(*Mux).ServeHTTP\n\tC:/Users/Stanislav/go/pkg/mod/github.com/go-chi/chi@v1.5.5/mux.go:87\ngithub.com/SlawaBE/go-musthave-diploma/internal/server.Run.GZip.func1\n\tD:/work/projects/go-musthave-diploma/internal/middleware/gzip.go:51\nnet/http.HandlerFunc.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:2286\ngithub.com/SlawaBE/go-musthave-diploma/internal/server.Run.RequestLogger.func2\n\tD:/work/projects/go-musthave-diploma/internal/middleware/logger.go:33\nnet/http.HandlerFunc.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:2286\nnet/http.serverHandler.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:3311\nnet/http.(*conn).serve\n\tC:/Program Files/Go/src/net/http/server.go:2073"}
+        {"level":"info","time":"2026-09-05T02:28:25.337+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"POST","duration":0.0010203,"status":200,"size":0}
+        {"level":"info","time":"2026-09-05T02:28:25.338+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"GET","duration":0.0005606,"status":200,"size":107}
+        {"level":"info","time":"2026-09-05T02:28:25.350+0300","caller":"repository/users.go:54","msg":"user saved","id":39}
+        {"level":"info","time":"2026-09-05T02:28:25.351+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/register","method":"POST","duration":0.0116978,"status":200,"size":23}
+        {"level":"error","time":"2026-09-05T02:28:25.351+0300","caller":"repository/orders.go:46","msg":"error exec statement","error":"ERROR: duplicate key value violates unique constraint \"orders_number_unique\" (SQLSTATE 23505)","stacktrace":"github.com/SlawaBE/go-musthave-diploma/internal/repository.(*OrderRepository).SaveOrder\n\tD:/work/projects/go-musthave-diploma/internal/repository/orders.go:46\ngithub.com/SlawaBE/go-musthave-diploma/internal/handler.(*OrdersUploadHandler).ServeHTTP\n\tD:/work/projects/go-musthave-diploma/internal/handler/order.go:79\nnet/http.HandlerFunc.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:2286\ngithub.com/SlawaBE/go-musthave-diploma/internal/server.InitRouter.(*TokenService).CreateAuthMiddleware.func2.1\n\tD:/work/projects/go-musthave-diploma/internal/service/jwt_token.go:88\nnet/http.HandlerFunc.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:2286\ngithub.com/go-chi/chi.(*ChainHandler).ServeHTTP\n\tC:/Users/Stanislav/go/pkg/mod/github.com/go-chi/chi@v1.5.5/chain.go:31\ngithub.com/go-chi/chi.(*Mux).routeHTTP\n\tC:/Users/Stanislav/go/pkg/mod/github.com/go-chi/chi@v1.5.5/mux.go:436\nnet/http.HandlerFunc.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:2286\ngithub.com/go-chi/chi.(*Mux).ServeHTTP\n\tC:/Users/Stanislav/go/pkg/mod/github.com/go-chi/chi@v1.5.5/mux.go:70\ngithub.com/go-chi/chi.(*Mux).Mount.func1\n\tC:/Users/Stanislav/go/pkg/mod/github.com/go-chi/chi@v1.5.5/mux.go:311\nnet/http.HandlerFunc.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:2286\ngithub.com/go-chi/chi.(*Mux).routeHTTP\n\tC:/Users/Stanislav/go/pkg/mod/github.com/go-chi/chi@v1.5.5/mux.go:436\nnet/http.HandlerFunc.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:2286\ngithub.com/go-chi/chi.(*Mux).ServeHTTP\n\tC:/Users/Stanislav/go/pkg/mod/github.com/go-chi/chi@v1.5.5/mux.go:87\ngithub.com/SlawaBE/go-musthave-diploma/internal/server.Run.GZip.func1\n\tD:/work/projects/go-musthave-diploma/internal/middleware/gzip.go:51\nnet/http.HandlerFunc.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:2286\ngithub.com/SlawaBE/go-musthave-diploma/internal/server.Run.RequestLogger.func2\n\tD:/work/projects/go-musthave-diploma/internal/middleware/logger.go:33\nnet/http.HandlerFunc.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:2286\nnet/http.serverHandler.ServeHTTP\n\tC:/Program Files/Go/src/net/http/server.go:3311\nnet/http.(*conn).serve\n\tC:/Program Files/Go/src/net/http/server.go:2073"}
+        {"level":"info","time":"2026-09-05T02:28:25.352+0300","caller":"middleware/logger.go:35","msg":"receive http request","uri":"/api/user/orders","method":"POST","duration":0.0010266,"status":409,"size":0}
+    gophermart_suite_test.go:109: останавливаем процесс accrual
+    gophermart_suite_test.go:128: Процесс завершился с не нулевым статусом 1
+    gophermart_suite_test.go:141: Получен STDOUT лог процесса:
+        
+        {"level":"info","ts":1788564485.031815,"caller":"accrual/main.go:52","msg":"starting HTTP server","addr":"localhost:8081"}
+--- FAIL: TestGophermart (20.35s)
+    --- FAIL: TestGophermart/TestEndToEnd (20.02s)
+        --- PASS: TestGophermart/TestEndToEnd/register_accrual_mechanic (0.01s)
+        --- PASS: TestGophermart/TestEndToEnd/register_order_for_accrual (0.00s)
+        --- PASS: TestGophermart/TestEndToEnd/register_user (0.01s)
+        --- PASS: TestGophermart/TestEndToEnd/order_upload (0.00s)
+        --- FAIL: TestGophermart/TestEndToEnd/await_order_processed (20.00s)
+        --- FAIL: TestGophermart/TestEndToEnd/check_balance (0.00s)
+        --- FAIL: TestGophermart/TestEndToEnd/withdraw_balance (0.00s)
+        --- FAIL: TestGophermart/TestEndToEnd/recheck_balance (0.00s)
+        --- FAIL: TestGophermart/TestEndToEnd/check_withdrawals (0.00s)
+    --- PASS: TestGophermart/TestUserAuth (0.01s)
+        --- PASS: TestGophermart/TestUserAuth/register_user (0.00s)
+        --- PASS: TestGophermart/TestUserAuth/login_user (0.00s)
+    --- PASS: TestGophermart/TestUserOrders (0.02s)
+        --- PASS: TestGophermart/TestUserOrders/unauthorized_order_upload (0.00s)
+        --- PASS: TestGophermart/TestUserOrders/unauthorized_orders_list (0.00s)
+        --- PASS: TestGophermart/TestUserOrders/register_user (0.00s)
+        --- PASS: TestGophermart/TestUserOrders/bad_order_upload (0.00s)
+        --- PASS: TestGophermart/TestUserOrders/order_upload (0.00s)
+        --- PASS: TestGophermart/TestUserOrders/duplicate_order_upload_same_user (0.00s)
+        --- PASS: TestGophermart/TestUserOrders/orders_list (0.00s)
+        --- PASS: TestGophermart/TestUserOrders/duplicate_order_upload_other_user (0.01s)
+FAIL
