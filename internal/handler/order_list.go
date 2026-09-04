@@ -40,7 +40,7 @@ func (h *OrdersListHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbOrders, err := h.repository.Orders(r.Context(), user.Id)
+	dbOrders, err := h.repository.Orders(r.Context(), user.ID)
 	if err != nil {
 		http.Error(w, "Error check order", http.StatusInternalServerError)
 		return

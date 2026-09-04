@@ -20,8 +20,8 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 }
 
 const (
-	INSERT_USER = `INSERT INTO users (login, password_hash) VALUES ($1, $2);`
-	SELECT_USER_BY_LOGIN = `SELECT id, login, password_hash FROM users WHERE login = $1;`
+	InsertUser        = `INSERT INTO users (login, password_hash) VALUES ($1, $2);`
+	SelectUserByLogin = `SELECT id, login, password_hash FROM users WHERE login = $1;`
 )
 
 func (u *UserRepository) SaveUser(ctx context.Context, user model.User) error {
@@ -32,7 +32,7 @@ func (u *UserRepository) SaveUser(ctx context.Context, user model.User) error {
 	}
 	defer tx.Rollback()
 
-	stmt, err := tx.PrepareContext(ctx, INSERT_USER)
+	stmt, err := tx.PrepareContext(ctx, InsertUser)
 	if err != nil {
 		logger.Log.Error("error prepare statement", zap.Error(err))
 		return err
@@ -54,10 +54,10 @@ func (u *UserRepository) SaveUser(ctx context.Context, user model.User) error {
 
 func (u *UserRepository) GetUserByLogin(ctx context.Context, login string) (*model.User, error) {
 	var user model.User
-	rows := u.db.QueryRowContext(ctx, SELECT_USER_BY_LOGIN, login)
+	rows := u.db.QueryRowContext(ctx, SelectUserByLogin, login)
 	var err error
 
-	if err = rows.Scan(&user.Id, &user.Login, &user.PasswordHash); err != nil {
+	if err = rows.Scan(&user.ID, &user.Login, &user.PasswordHash); err != nil {
 		logger.Log.Error("error get login", zap.String("login", login), zap.Error(err))
 		return nil, err
 	}

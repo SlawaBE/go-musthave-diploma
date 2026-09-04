@@ -17,8 +17,8 @@ const (
 )
 
 type Order struct {
-	Id         uint64
-	UserId     uint64
+	ID         uint64
+	UserID     uint64
 	Number     string
 	Status     OrderStatus
 	UploadedAt pgtype.Timestamptz

@@ -26,7 +26,7 @@ func NewTokenService(secretKey string, tokenLifetime time.Duration) *TokenServic
 	}
 }
 
-const LoginContextKey = "login"
+type loginContextKey struct {}
 
 func (s *TokenService) BuildJWTString(login string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
@@ -83,7 +83,7 @@ func (s *TokenService) CreateAuthMiddleware() func(http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), LoginContextKey, claims.Login)
+			ctx := context.WithValue(r.Context(), loginContextKey{}, claims.Login)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
@@ -91,6 +91,6 @@ func (s *TokenService) CreateAuthMiddleware() func(http.Handler) http.Handler {
 }
 
 func GetLoginFromContext(ctx context.Context) (string, bool) {
-	login, ok := ctx.Value(LoginContextKey).(string)
+	login, ok := ctx.Value(loginContextKey{}).(string)
 	return login, ok
 }

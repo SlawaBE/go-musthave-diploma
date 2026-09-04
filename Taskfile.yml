@@ -5,6 +5,7 @@ version: '3'
 vars:
   SERVER_BINARY: cmd/gophermart/gophermart.exe
   ACCRUAL_BINARY: cmd/accrual/accrual_windows_amd64
+  STATICTEST_BINARY: statictest-windows-amd64.exe
 
 tasks:
   clean:
@@ -25,3 +26,8 @@ tasks:
     desc: Run tests
     cmds:
       - go test -v ./...
+
+  vet:
+    desc: Run statictest
+    cmds:
+      - go vet -vettool={{.STATICTEST_BINARY}} ./...

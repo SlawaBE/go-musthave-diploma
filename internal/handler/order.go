@@ -81,7 +81,7 @@ func (h *OrdersUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	order := &model.Order{
 		Number:  orderNumber,
-		UserId:  user.Id,
+		UserID:  user.ID,
 		Status:  model.OrderStatus(asr.Status),
 		Accrual: asr.Accrual,
 	}
@@ -93,7 +93,7 @@ func (h *OrdersUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 				http.Error(w, "Error check order", http.StatusInternalServerError)
 				return
 			}
-			if order.UserId == user.Id {
+			if order.UserID == user.ID {
 				w.WriteHeader(http.StatusOK)
 				return
 			}
