@@ -10,16 +10,16 @@ import (
 )
 
 type BalanceHandler struct {
-	repository          *repository.OrderRepository
-	userRepository      *repository.UserRepository
-	withdrawnRepository *repository.WitdrawnRepository
+	repository         *repository.OrderRepository
+	userRepository     *repository.UserRepository
+	withdrawRepository *repository.WitdrawRepository
 }
 
-func NewBalanceHandler(repository *repository.OrderRepository, userRepository *repository.UserRepository, withdrawnRepository *repository.WitdrawnRepository) *BalanceHandler {
+func NewBalanceHandler(repository *repository.OrderRepository, userRepository *repository.UserRepository, withdrawRepository *repository.WitdrawRepository) *BalanceHandler {
 	return &BalanceHandler{
-		repository:          repository,
-		userRepository:      userRepository,
-		withdrawnRepository: withdrawnRepository,
+		repository:         repository,
+		userRepository:     userRepository,
+		withdrawRepository: withdrawRepository,
 	}
 }
 
@@ -46,15 +46,15 @@ func (h *BalanceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error calc balance", http.StatusInternalServerError)
 		return
 	}
-	withdrawn, err := h.withdrawnRepository.GetSumOfWithdrawn(r.Context(), user.ID)
+	withdraw, err := h.withdrawRepository.GetSumOfWithdraw(r.Context(), user.ID)
 	if err != nil {
 		http.Error(w, "Error calc balance", http.StatusInternalServerError)
 		return
 	}
 
 	balance := &model.BalanceResponse{
-		Current:   *total - *withdrawn,
-		Withdrawn: *withdrawn,
+		Current:  *total - *withdraw,
+		Withdraw: *withdraw,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
