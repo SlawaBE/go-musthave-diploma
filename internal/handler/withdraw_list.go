@@ -12,13 +12,11 @@ import (
 
 type WithdrawListHandler struct {
 	repository     *repository.WithdrawRepository
-	userRepository *repository.UserRepository
 }
 
-func NewWithdrawListHandler(repository *repository.WithdrawRepository, userRepository *repository.UserRepository) *WithdrawListHandler {
+func NewWithdrawListHandler(repository *repository.WithdrawRepository) *WithdrawListHandler {
 	return &WithdrawListHandler{
 		repository:     repository,
-		userRepository: userRepository,
 	}
 }
 
@@ -28,19 +26,13 @@ func (h *WithdrawListHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	login, ok := service.GetLoginFromContext(r.Context())
+	userID, ok := service.GetUserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	user, err := h.userRepository.GetUserByLogin(r.Context(), login)
-	if err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
-		return
-	}
-
-	dbWithdrawals, err := h.repository.Withdrawals(r.Context(), user.ID)
+	dbWithdrawals, err := h.repository.Withdrawals(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "Error check order", http.StatusInternalServerError)
 		return

@@ -16,7 +16,7 @@ type TokenService struct {
 
 type Claims struct {
 	jwt.RegisteredClaims
-	Login string `json:"login"`
+	UserID uint64 `json:"user_id"`
 }
 
 func NewTokenService(secretKey string, tokenLifetime time.Duration) *TokenService {
@@ -26,14 +26,14 @@ func NewTokenService(secretKey string, tokenLifetime time.Duration) *TokenServic
 	}
 }
 
-type loginContextKey struct {}
+type userIDContextKey struct{}
 
-func (s *TokenService) BuildJWTString(login string) (string, error) {
+func (s *TokenService) BuildJWTString(userID uint64) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.tokenLifetime)),
 		},
-		Login: login,
+		UserID: userID,
 	})
 
 	tokenString, err := token.SignedString([]byte(s.secretKey))
@@ -83,14 +83,14 @@ func (s *TokenService) CreateAuthMiddleware() func(http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), loginContextKey{}, claims.Login)
+			ctx := context.WithValue(r.Context(), userIDContextKey{}, claims.UserID)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-func GetLoginFromContext(ctx context.Context) (string, bool) {
-	login, ok := ctx.Value(loginContextKey{}).(string)
-	return login, ok
+func GetUserIDFromContext(ctx context.Context) (uint64, bool) {
+	userID, ok := ctx.Value(userIDContextKey{}).(uint64)
+	return userID, ok
 }

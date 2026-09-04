@@ -20,7 +20,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 }
 
 const (
-	InsertUser        = `INSERT INTO users (login, password_hash) VALUES ($1, $2);`
+	InsertUser        = `INSERT INTO users (login, password_hash) VALUES ($1, $2) RETURNING id`
 	SelectUserByLogin = `SELECT id, login, password_hash FROM users WHERE login = $1;`
 )
 
@@ -39,7 +39,7 @@ func (u *UserRepository) SaveUser(ctx context.Context, user model.User) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.ExecContext(ctx, user.Login, user.PasswordHash)
+	err = stmt.QueryRowContext(ctx, user.Login, user.PasswordHash).Scan(&user.ID)
 	if err != nil {
 		logger.Log.Error("error exec statement", zap.Error(err))
 		return err
@@ -48,8 +48,11 @@ func (u *UserRepository) SaveUser(ctx context.Context, user model.User) error {
 	err = tx.Commit()
 	if err != nil {
 		logger.Log.Error("error commit transaction", zap.Error(err))
+		return err
 	}
-	return err
+
+	logger.Log.Info("user saved", zap.Uint64("id", user.ID))
+	return nil
 }
 
 func (u *UserRepository) GetUserByLogin(ctx context.Context, login string) (*model.User, error) {

@@ -11,14 +11,12 @@ import (
 )
 
 type OrdersListHandler struct {
-	repository     *repository.OrderRepository
-	userRepository *repository.UserRepository
+	repository *repository.OrderRepository
 }
 
-func NewOrdersListHandler(repository *repository.OrderRepository, userRepository *repository.UserRepository) *OrdersListHandler {
+func NewOrdersListHandler(repository *repository.OrderRepository) *OrdersListHandler {
 	return &OrdersListHandler{
-		repository:     repository,
-		userRepository: userRepository,
+		repository: repository,
 	}
 }
 
@@ -28,21 +26,20 @@ func (h *OrdersListHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	login, ok := service.GetLoginFromContext(r.Context())
+	userID, ok := service.GetUserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	user, err := h.userRepository.GetUserByLogin(r.Context(), login)
+	dbOrders, err := h.repository.Orders(r.Context(), userID)
 	if err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
+		http.Error(w, "Error check order", http.StatusInternalServerError)
 		return
 	}
 
-	dbOrders, err := h.repository.Orders(r.Context(), user.ID)
-	if err != nil {
-		http.Error(w, "Error check order", http.StatusInternalServerError)
+	if len(dbOrders) == 0 {
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 

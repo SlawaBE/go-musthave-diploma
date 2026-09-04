@@ -15,14 +15,12 @@ import (
 
 type WitdrawUploadHandler struct {
 	repository      *repository.WithdrawRepository
-	userRepository  *repository.UserRepository
 	orderRepository *repository.OrderRepository
 }
 
-func NewWitdrawUploadHandler(repository *repository.WithdrawRepository, userRepository *repository.UserRepository, orderRepository *repository.OrderRepository) *WitdrawUploadHandler {
+func NewWitdrawUploadHandler(repository *repository.WithdrawRepository, orderRepository *repository.OrderRepository) *WitdrawUploadHandler {
 	return &WitdrawUploadHandler{
 		repository:      repository,
-		userRepository:  userRepository,
 		orderRepository: orderRepository,
 	}
 }
@@ -59,25 +57,19 @@ func (h *WitdrawUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	login, ok := service.GetLoginFromContext(r.Context())
+	userID, ok := service.GetUserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	user, err := h.userRepository.GetUserByLogin(r.Context(), login)
-	if err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
-		return
-	}
-
-	balance, err := h.orderRepository.GetSumOfAccrual(r.Context(), user.ID)
+	balance, err := h.orderRepository.GetSumOfAccrual(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "Error calc balance", http.StatusInternalServerError)
 		return
 	}
 
-	withdrawals, err := h.repository.GetSumOfWithdraw(r.Context(), user.ID)
+	withdrawals, err := h.repository.GetSumOfWithdraw(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "Error calc balance", http.StatusInternalServerError)
 		return
@@ -90,7 +82,7 @@ func (h *WitdrawUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 
 	withdraw := &model.Withdraw{
 		OrderNumber: request.OrderNumber,
-		UserID:      user.ID,
+		UserID:      userID,
 		Total:       request.Total,
 	}
 	err = h.repository.SaveWitdrawn(r.Context(), *withdraw)

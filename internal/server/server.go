@@ -72,11 +72,11 @@ func InitRouter(database *sql.DB, config config.Config) chi.Router {
 
 	registerHandler := handler.NewRegisterHandler(ur, ts)
 	loginHandler := handler.NewLoginHandler(ur, ts)
-	ordersUploadHandler := handler.NewOrdersUploadHandler(or, ur, as)
-	ordersListHandler := handler.NewOrdersListHandler(or, ur)
-	balanceHandler := handler.NewBalanceHandler(or, ur, wr)
-	withdrawUploadHandler := handler.NewWitdrawUploadHandler(wr, ur, or)
-	withdrawListHandler := handler.NewWithdrawListHandler(wr, ur)
+	ordersUploadHandler := handler.NewOrdersUploadHandler(or, as)
+	ordersListHandler := handler.NewOrdersListHandler(or)
+	balanceHandler := handler.NewBalanceHandler(or, wr)
+	withdrawUploadHandler := handler.NewWitdrawUploadHandler(wr, or)
+	withdrawListHandler := handler.NewWithdrawListHandler(wr)
 
 	authMiddleware := ts.CreateAuthMiddleware()
 

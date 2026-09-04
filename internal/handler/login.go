@@ -67,7 +67,7 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwtToken, err := h.tokenService.BuildJWTString(request.Login)
+	jwtToken, err := h.tokenService.BuildJWTString(dbUser.ID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

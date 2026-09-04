@@ -11,14 +11,12 @@ import (
 
 type BalanceHandler struct {
 	repository         *repository.OrderRepository
-	userRepository     *repository.UserRepository
 	withdrawRepository *repository.WithdrawRepository
 }
 
-func NewBalanceHandler(repository *repository.OrderRepository, userRepository *repository.UserRepository, withdrawRepository *repository.WithdrawRepository) *BalanceHandler {
+func NewBalanceHandler(repository *repository.OrderRepository, withdrawRepository *repository.WithdrawRepository) *BalanceHandler {
 	return &BalanceHandler{
 		repository:         repository,
-		userRepository:     userRepository,
 		withdrawRepository: withdrawRepository,
 	}
 }
@@ -29,24 +27,18 @@ func (h *BalanceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	login, ok := service.GetLoginFromContext(r.Context())
+	userID, ok := service.GetUserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	user, err := h.userRepository.GetUserByLogin(r.Context(), login)
-	if err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
-		return
-	}
-
-	total, err := h.repository.GetSumOfAccrual(r.Context(), user.ID)
+	total, err := h.repository.GetSumOfAccrual(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "Error calc balance", http.StatusInternalServerError)
 		return
 	}
-	withdraw, err := h.withdrawRepository.GetSumOfWithdraw(r.Context(), user.ID)
+	withdraw, err := h.withdrawRepository.GetSumOfWithdraw(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "Error calc balance", http.StatusInternalServerError)
 		return

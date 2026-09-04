@@ -14,14 +14,12 @@ import (
 
 type OrdersUploadHandler struct {
 	repository     *repository.OrderRepository
-	userRepository *repository.UserRepository
 	accrualService *service.AccrualService
 }
 
-func NewOrdersUploadHandler(repository *repository.OrderRepository, userRepository *repository.UserRepository, accrualService *service.AccrualService) *OrdersUploadHandler {
+func NewOrdersUploadHandler(repository *repository.OrderRepository, accrualService *service.AccrualService) *OrdersUploadHandler {
 	return &OrdersUploadHandler{
 		repository:     repository,
-		userRepository: userRepository,
 		accrualService: accrualService,
 	}
 }
@@ -61,29 +59,22 @@ func (h *OrdersUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	login, ok := service.GetLoginFromContext(r.Context())
+	userID, ok := service.GetUserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	user, err := h.userRepository.GetUserByLogin(r.Context(), login)
-	if err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
-		return
-	}
-
-	asr, err := h.accrualService.GetAccrual(orderNumber)
-	if err != nil {
-		http.Error(w, "Error getting accrual", http.StatusInternalServerError)
-		return
-	}
+	// asr, err := h.accrualService.GetAccrual(orderNumber)
+	// if err != nil {
+	// 	http.Error(w, "Error getting accrual", http.StatusInternalServerError)
+	// 	return
+	// }
 
 	order := &model.Order{
 		Number:  orderNumber,
-		UserID:  user.ID,
-		Status:  model.OrderStatus(asr.Status),
-		Accrual: asr.Accrual,
+		UserID:  userID,
+		Status:  "NEW",
 	}
 	err = h.repository.SaveOrder(r.Context(), *order)
 	if err != nil {
@@ -93,7 +84,7 @@ func (h *OrdersUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 				http.Error(w, "Error check order", http.StatusInternalServerError)
 				return
 			}
-			if order.UserID == user.ID {
+			if order.UserID == userID {
 				w.WriteHeader(http.StatusOK)
 				return
 			}
@@ -101,6 +92,23 @@ func (h *OrdersUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 	}
+
+	//TODO надо создать воркеров, которые в фоне будет обрабатывать заказы
+	// - передавать новые заказы через канал отсюда
+	// - другая горутина раз в единицу времени выгребает пачку NEW/PROCESSING и также передаёт через канал
+	// - воркеры ходят в accrual
+	// Обработка
+	// - для PROCESSED/INVALID вышли
+	// - для NEW поставили PROCESSING
+	// - сходили в accrual-service
+	// - для PROCESSED/INVALID обновили заказ поставили статус вернувшийся оттуда и сумму (если была)
+	// - 429, 500 - обработается resty - повторный поход в рамках текущей задачи, при исчерпании попыток останется PROCESSING
+	// - для 204 - будем считать, что необходимо прити позже (заказ догрузят) - тоже оставляем PROCESSING
+	// Дополнение
+	// - по идее, надо гребсти (NEW, PROCESSING) т.к. могут быть незавершённые задачи из-за перезапусков сервиса
+	// - обработать заказ дважды не страшно т.к. баланс считается суммированием по заказам
+	// - можно проверять наличие заказов в статусе PROCESSING при старте приложения и сбрасывать их в NEW
+	// - было бы прикольно для задач не в финальном статусе снова записывать их в канал, но если он забъётся, то воркеры могут встать пытаясь записать в канал, из которого читают сами же
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)

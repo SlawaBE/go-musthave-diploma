@@ -53,10 +53,12 @@ func (h *RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.repository.SaveUser(r.Context(), model.User{
+	user := model.User{
 		Login:        request.Login,
 		PasswordHash: hex.EncodeToString(hash.Sha256([]byte(request.Password))),
-	})
+	}
+
+	err := h.repository.SaveUser(r.Context(), user)
 
 	if err != nil {
 		if IsNotUniqError(err) {
@@ -67,7 +69,7 @@ func (h *RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwtToken, err := h.tokenService.BuildJWTString(request.Login)
+	jwtToken, err := h.tokenService.BuildJWTString(user.ID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
