@@ -13,8 +13,8 @@ WHERE users.login = numbered.login;
 
 ALTER TABLE users ALTER COLUMN id SET NOT NULL;
 
-CREATE SEQUENCE users_id_seq;
-SELECT setval('users_id_seq', (SELECT COALESCE(MAX(id), 0) FROM users));
+CREATE SEQUENCE IF NOT EXISTS users_id_seq;
+SELECT setval('users_id_seq', (SELECT COALESCE(MAX(id), 1) FROM users));
 
 ALTER TABLE users ALTER COLUMN id SET DEFAULT nextval('users_id_seq');
 

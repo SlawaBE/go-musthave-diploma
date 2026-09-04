@@ -11,7 +11,7 @@ import (
 
 func Sha256(data []byte) []byte {
 	hasher := sha256.New()
-	hasher.Write([]byte(data))
+	hasher.Write(data)
 	return hasher.Sum(nil)
 }
 

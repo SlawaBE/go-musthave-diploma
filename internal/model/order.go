@@ -22,6 +22,14 @@ type Order struct {
 	Number     string
 	Status     OrderStatus
 	UploadedAt pgtype.Timestamptz
+	Accrual    *float32
+}
+
+type OrderItem struct {
+	Number     string      `json:"number"`
+	Status     OrderStatus `json:"status"`
+	Accrual    *float32    `json:"accrual,omitempty"`
+	UploadedAt string      `json:"uploaded_at"`
 }
 
 func (s *OrderStatus) Scan(value interface{}) error {

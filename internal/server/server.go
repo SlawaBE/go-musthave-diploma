@@ -26,7 +26,7 @@ func Run(config config.Config) {
 	database := initDatabase(config)
 	defer database.Close()
 
-	var r http.Handler = InitRouter(database)
+	var r http.Handler = InitRouter(database, config)
 
 	r = middleware.GZip(r)
 	r = middleware.RequestLogger(r)
@@ -59,18 +59,20 @@ func initDatabase(config config.Config) *sql.DB {
 	return database
 }
 
-func InitRouter(database *sql.DB) chi.Router {
+func InitRouter(database *sql.DB, config config.Config) chi.Router {
 	r := chi.NewRouter()
 
 	jwtSecret := rand.Text()
 	logger.Log.Info("JWT secret: " + jwtSecret) //TODO change to debug or delete
 	ts := service.NewTokenService(jwtSecret, time.Minute*30)
+	as := service.NewAccrualService(config.AccrualSystemAddress)
 	ur := repository.NewUserRepository(database)
 	or := repository.NewOrderRepository(database)
 
 	registerHandler := handler.NewRegisterHandler(ur, ts)
 	loginHandler := handler.NewLoginHandler(ur, ts)
-	ordersUploadHandler := handler.NewOrdersUploadHandler(or, ur)
+	ordersUploadHandler := handler.NewOrdersUploadHandler(or, ur, as)
+	ordersListHandler := handler.NewOrdersListHandler(or, ur)
 
 	authMiddleware := ts.CreateAuthMiddleware()
 
@@ -80,7 +82,8 @@ func InitRouter(database *sql.DB) chi.Router {
 
 		r.Group(func(r chi.Router) {
 			r.Use(authMiddleware)
-			r.Handle("/orders", ordersUploadHandler)
+			r.Post("/orders", ordersUploadHandler.ServeHTTP)
+			r.Get("/orders", ordersListHandler.ServeHTTP)
 		})
 	})
 

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -16,12 +15,14 @@ import (
 type OrdersUploadHandler struct {
 	repository     *repository.OrderRepository
 	userRepository *repository.UserRepository
+	accrualService *service.AccrualService
 }
 
-func NewOrdersUploadHandler(repository *repository.OrderRepository, userRepository *repository.UserRepository) *OrdersUploadHandler {
+func NewOrdersUploadHandler(repository *repository.OrderRepository, userRepository *repository.UserRepository, accrualService *service.AccrualService) *OrdersUploadHandler {
 	return &OrdersUploadHandler{
 		repository:     repository,
 		userRepository: userRepository,
+		accrualService: accrualService,
 	}
 }
 
@@ -44,8 +45,6 @@ func (h *OrdersUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	}
 	defer r.Body.Close()
 
-	fmt.Println(body)
-
 	orderNumber := strings.TrimSpace(string(body))
 	if orderNumber == "" {
 		http.Error(w, "Order number is required", http.StatusBadRequest)
@@ -57,13 +56,11 @@ func (h *OrdersUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Проверяем по алгоритму Луна
 	if !validator.ValidateLuhn(orderNumber) {
 		http.Error(w, "Invalid order number (Luhn check failed)", http.StatusUnprocessableEntity)
 		return
 	}
 
-	// Получаем логин из контекста (добавленный middleware)
 	login, ok := service.GetLoginFromContext(r.Context())
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -76,10 +73,17 @@ func (h *OrdersUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	asr, err := h.accrualService.GetAccrual(orderNumber)
+	if err != nil {
+		http.Error(w, "Error getting accrual", http.StatusInternalServerError)
+		return
+	}
+
 	order := &model.Order{
-		Number: orderNumber,
-		UserId: user.Id,
-		Status: "NEW",
+		Number:  orderNumber,
+		UserId:  user.Id,
+		Status:  model.OrderStatus(asr.Status),
+		Accrual: asr.Accrual,
 	}
 	err = h.repository.SaveOrder(r.Context(), *order)
 	if err != nil {
