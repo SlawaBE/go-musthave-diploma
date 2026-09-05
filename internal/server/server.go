@@ -65,10 +65,12 @@ func InitRouter(database *sql.DB, config config.Config) chi.Router {
 	jwtSecret := rand.Text()
 	logger.Log.Info("JWT secret: " + jwtSecret) //TODO change to debug or delete
 	ts := service.NewTokenService(jwtSecret, time.Minute*30)
-	as := service.NewAccrualService(config.AccrualSystemAddress)
 	ur := repository.NewUserRepository(database)
 	or := repository.NewOrderRepository(database)
 	wr := repository.NewWitdrawRepository(database)
+	
+	as := service.NewAccrualService(config.AccrualSystemAddress, or)
+	as.Run(context.Background())
 
 	registerHandler := handler.NewRegisterHandler(ur, ts)
 	loginHandler := handler.NewLoginHandler(ur, ts)

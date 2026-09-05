@@ -20,13 +20,16 @@ func NewOrderRepository(db *sql.DB) *OrderRepository {
 }
 
 const (
-	InsertOrder              = `INSERT INTO orders (user_id, number, status, accrual) VALUES ($1, $2, $3, $4);`
+	InsertOrder              = `INSERT INTO orders (user_id, number, status) VALUES ($1, $2, $3) RETURNING id;`
 	SelectOrderByNumber      = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE number = $1;`
 	SelectOrderByUserID      = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE user_id = $1 ORDER BY uploaded_at DESC;`
 	SelectSumAccrualByUserID = `SELECT coalesce(sum(accrual), 0) as total FROM orders WHERE user_id = $1;`
+	SelectOrderByID          = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE id = $1;`
+	UpdateOrderStatus        = `UPDATE orders SET status = $2 WHERE id = $1;`
+	SetAccrual               = `UPDATE orders SET accrual = $2, status = $3 WHERE id = $1;`
 )
 
-func (w *OrderRepository) SaveOrder(ctx context.Context, order model.Order) error {
+func (w *OrderRepository) SaveOrder(ctx context.Context, order *model.Order) error {
 	tx, err := w.db.Begin()
 	if err != nil {
 		logger.Log.Error("error begin transaction", zap.Error(err))
@@ -41,7 +44,7 @@ func (w *OrderRepository) SaveOrder(ctx context.Context, order model.Order) erro
 	}
 	defer stmt.Close()
 
-	_, err = stmt.ExecContext(ctx, order.UserID, order.Number, order.Status, order.Accrual)
+	err = stmt.QueryRowContext(ctx, order.UserID, order.Number, order.Status).Scan(&order.ID)
 	if err != nil {
 		logger.Log.Error("error exec statement", zap.Error(err))
 		return err
@@ -102,4 +105,72 @@ func (w *OrderRepository) GetSumOfAccrual(ctx context.Context, userID uint64) (*
 	}
 
 	return &sum, nil
+}
+
+func (w *OrderRepository) GetOrderByID(ctx context.Context, orderID uint64) (*model.Order, error) {
+	var order model.Order
+	row := w.db.QueryRowContext(ctx, SelectOrderByID, orderID)
+	var err error
+
+	if err = row.Scan(&order.ID, &order.UserID, &order.Number, &order.Status, &order.UploadedAt, &order.Accrual); err != nil {
+		logger.Log.Error("error get order", zap.Uint64("order_id", orderID), zap.Error(err))
+		return nil, err
+	}
+	return &order, nil
+}
+
+func (w *OrderRepository) UpdateStatus(ctx context.Context, orderID uint64, status model.OrderStatus) error {
+	tx, err := w.db.Begin()
+	if err != nil {
+		logger.Log.Error("error begin transaction", zap.Error(err))
+		return err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.PrepareContext(ctx, UpdateOrderStatus)
+	if err != nil {
+		logger.Log.Error("error prepare statement", zap.Error(err))
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, orderID, status)
+	if err != nil {
+		logger.Log.Error("error exec statement", zap.Error(err))
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		logger.Log.Error("error commit transaction", zap.Error(err))
+	}
+	return err
+}
+
+func (w *OrderRepository) SetAccrual(ctx context.Context, orderID uint64, accrual *float32) error {
+	tx, err := w.db.Begin()
+	if err != nil {
+		logger.Log.Error("error begin transaction", zap.Error(err))
+		return err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.PrepareContext(ctx, SetAccrual)
+	if err != nil {
+		logger.Log.Error("error prepare statement", zap.Error(err))
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, orderID, accrual, model.OrderStatusProcessed)
+	if err != nil {
+		logger.Log.Error("error exec statement", zap.Error(err))
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		logger.Log.Error("error commit transaction", zap.Error(err))
+	}
+	return err
 }
