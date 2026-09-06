@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+vars:
+  SERVER_BINARY: cmd/gophermart/gophermart.exe
+  ACCRUAL_BINARY: cmd/accrual/accrual_windows_amd64
+  STATICTEST_BINARY: statictest-windows-amd64.exe
+  LOG_DIR: logs
+
+tasks:
+  clean:
+    desc: Clean
+    cmds:
+      - rm -f {{.SERVER_BINARY}}
+      - rm -rf {{.LOG_DIR}}
+
+  build:
+    desc: Build gophermart app
+    cmds:
+      - go build -o {{.SERVER_BINARY}} ./cmd/gophermart/
+    sources:
+      - "**/*.go"
+    generates:
+      - "{{.SERVER_BINARY}}"
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test -v ./...
+
+  vet:
+    desc: Run statictest
+    cmds:
+      - go vet -vettool={{.STATICTEST_BINARY}} ./...
+  
+  autotest:
+    desc: Run autotests
+    deps: 
+      - build
+    cmds:
+      - bash ./autotest.sh
