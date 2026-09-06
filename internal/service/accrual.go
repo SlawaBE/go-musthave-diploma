@@ -22,14 +22,18 @@ type AccrualService struct {
 	orderRepository *repository.OrderRepository
 	jobs            chan uint64
 	wg              sync.WaitGroup
+	pollInterval    int
+	pollLimit       int
 }
 
 func NewAccrualService(accrualSystemAddress string, orderRepository *repository.OrderRepository) *AccrualService {
 	return &AccrualService{
 		client:          httpClient(accrualSystemAddress),
-		workersCount:    5, //TODO конфигурация воркеров и размера канала
+		workersCount:    5, //TODO конфигурация воркеров, размера канала, интервала и лимита поллинга
 		jobs:            make(chan uint64, 100),
 		orderRepository: orderRepository,
+		pollInterval:    60,
+		pollLimit:       100,
 	}
 }
 
@@ -45,8 +49,8 @@ func (a *AccrualService) Run(ctx context.Context) {
 			a.work(ctx, a.jobs)
 		})
 	}
-	//TODO при старте прочитать из базы все NEW/PROCESSING и записать в канал
-	//TODO добавить тикер, читающий NEW/PROCESSING раз в N-секунд или очередь отложенных задач для неудачно завершившихся воркеров
+
+	go a.runPollerOldOrders(ctx)
 }
 
 func (a *AccrualService) AddOrder(orderID uint64) {
@@ -56,6 +60,26 @@ func (a *AccrualService) AddOrder(orderID uint64) {
 func (a *AccrualService) Stop() {
 	close(a.jobs)
 	a.wg.Wait()
+}
+
+func (a *AccrualService) runPollerOldOrders(ctx context.Context) {
+	ticker := time.NewTicker(time.Duration(a.pollInterval) * time.Second)
+	for {
+		select {
+		case <-ctx.Done():
+			ticker.Stop()
+			return
+		case <-ticker.C:
+			ids, err := a.orderRepository.GetNOldestNotProcessedOrderIDs(ctx, a.pollLimit)
+			if err != nil {
+				logger.Log.Error("error polling orders", zap.Error(err))
+				continue
+			}
+			for _, id := range ids {
+				a.jobs <- id
+			}
+		}
+	}
 }
 
 func (a *AccrualService) work(ctx context.Context, jobs <-chan uint64) {

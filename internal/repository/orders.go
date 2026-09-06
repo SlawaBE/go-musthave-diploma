@@ -20,13 +20,14 @@ func NewOrderRepository(db *sql.DB) *OrderRepository {
 }
 
 const (
-	InsertOrder              = `INSERT INTO orders (user_id, number, status) VALUES ($1, $2, $3) RETURNING id;`
-	SelectOrderByNumber      = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE number = $1;`
-	SelectOrderByUserID      = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE user_id = $1 ORDER BY uploaded_at DESC;`
-	SelectSumAccrualByUserID = `SELECT coalesce(sum(accrual), 0) as total FROM orders WHERE user_id = $1;`
-	SelectOrderByID          = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE id = $1;`
-	UpdateOrderStatus        = `UPDATE orders SET status = $2 WHERE id = $1;`
-	SetAccrual               = `UPDATE orders SET accrual = $2, status = $3 WHERE id = $1;`
+	InsertOrder                    = `INSERT INTO orders (user_id, number, status) VALUES ($1, $2, $3) RETURNING id;`
+	SelectOrderByNumber            = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE number = $1;`
+	SelectOrderByUserID            = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE user_id = $1 ORDER BY uploaded_at DESC;`
+	SelectSumAccrualByUserID       = `SELECT coalesce(sum(accrual), 0) as total FROM orders WHERE user_id = $1;`
+	SelectOrderByID                = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE id = $1;`
+	UpdateOrderStatus              = `UPDATE orders SET status = $2 WHERE id = $1;`
+	SetAccrual                     = `UPDATE orders SET accrual = $2, status = $3 WHERE id = $1;`
+	GetNOldestNotProcessedOrderIDs = `SELECT id FROM orders WHERE status = 'NEW' or status = 'PROCESSING' ORDER BY uploaded_at ASC LIMIT $1`
 )
 
 func (w *OrderRepository) SaveOrder(ctx context.Context, order *model.Order) error {
@@ -173,4 +174,30 @@ func (w *OrderRepository) SetAccrual(ctx context.Context, orderID uint64, accrua
 		logger.Log.Error("error commit transaction", zap.Error(err))
 	}
 	return err
+}
+
+func (w *OrderRepository) GetNOldestNotProcessedOrderIDs(ctx context.Context, limit int) ([]uint64, error) {
+	ids := make([]uint64, 0)
+	rows, err := w.db.QueryContext(ctx, GetNOldestNotProcessedOrderIDs, limit)
+	if err != nil {
+		logger.Log.Error("error query", zap.Error(err))
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id uint64
+		if err = rows.Scan(&id); err != nil {
+			logger.Log.Error("error get order", zap.Error(err))
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		logger.Log.Error("error get orders", zap.Error(err))
+		return nil, err
+	}
+	return ids, nil
 }
