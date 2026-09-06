@@ -8,19 +8,17 @@ import (
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/logger"
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
-	"github.com/SlawaBE/go-musthave-diploma/internal/repository"
-	"github.com/SlawaBE/go-musthave-diploma/internal/service"
 	"github.com/SlawaBE/go-musthave-diploma/internal/utils/hash"
 	"github.com/jackc/pgx/v5/pgconn"
 	"go.uber.org/zap"
 )
 
 type RegisterHandler struct {
-	repository   *repository.UserRepository
-	tokenService *service.TokenService
+	repository   UserRepository
+	tokenService TokenService
 }
 
-func NewRegisterHandler(repository *repository.UserRepository, tokenService *service.TokenService) *RegisterHandler {
+func NewRegisterHandler(repository UserRepository, tokenService TokenService) *RegisterHandler {
 	return &RegisterHandler{
 		repository:   repository,
 		tokenService: tokenService,

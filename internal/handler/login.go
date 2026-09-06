@@ -7,18 +7,16 @@ import (
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/logger"
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
-	"github.com/SlawaBE/go-musthave-diploma/internal/repository"
-	"github.com/SlawaBE/go-musthave-diploma/internal/service"
 	"github.com/SlawaBE/go-musthave-diploma/internal/utils/hash"
 	"go.uber.org/zap"
 )
 
 type LoginHandler struct {
-	repository   *repository.UserRepository
-	tokenService *service.TokenService
+	repository   UserRepository
+	tokenService TokenService
 }
 
-func NewLoginHandler(repository *repository.UserRepository, tokenService *service.TokenService) *LoginHandler {
+func NewLoginHandler(repository UserRepository, tokenService TokenService) *LoginHandler {
 	return &LoginHandler{
 		repository:   repository,
 		tokenService: tokenService,

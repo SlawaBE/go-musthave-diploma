@@ -6,15 +6,14 @@ import (
 	"time"
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
-	"github.com/SlawaBE/go-musthave-diploma/internal/repository"
 	"github.com/SlawaBE/go-musthave-diploma/internal/service"
 )
 
 type WithdrawListHandler struct {
-	repository     *repository.WithdrawRepository
+	repository     WithdrawRepository
 }
 
-func NewWithdrawListHandler(repository *repository.WithdrawRepository) *WithdrawListHandler {
+func NewWithdrawListHandler(repository WithdrawRepository) *WithdrawListHandler {
 	return &WithdrawListHandler{
 		repository:     repository,
 	}

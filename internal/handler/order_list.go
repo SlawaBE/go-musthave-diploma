@@ -6,15 +6,14 @@ import (
 	"time"
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
-	"github.com/SlawaBE/go-musthave-diploma/internal/repository"
 	"github.com/SlawaBE/go-musthave-diploma/internal/service"
 )
 
 type OrdersListHandler struct {
-	repository *repository.OrderRepository
+	repository OrderRepository
 }
 
-func NewOrdersListHandler(repository *repository.OrderRepository) *OrdersListHandler {
+func NewOrdersListHandler(repository OrderRepository) *OrdersListHandler {
 	return &OrdersListHandler{
 		repository: repository,
 	}

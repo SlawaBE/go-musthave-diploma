@@ -5,16 +5,15 @@ import (
 	"net/http"
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
-	"github.com/SlawaBE/go-musthave-diploma/internal/repository"
 	"github.com/SlawaBE/go-musthave-diploma/internal/service"
 )
 
 type BalanceHandler struct {
-	repository         *repository.OrderRepository
-	withdrawRepository *repository.WithdrawRepository
+	repository         OrderRepository
+	withdrawRepository WithdrawRepository
 }
 
-func NewBalanceHandler(repository *repository.OrderRepository, withdrawRepository *repository.WithdrawRepository) *BalanceHandler {
+func NewBalanceHandler(repository OrderRepository, withdrawRepository WithdrawRepository) *BalanceHandler {
 	return &BalanceHandler{
 		repository:         repository,
 		withdrawRepository: withdrawRepository,

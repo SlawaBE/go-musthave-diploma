@@ -7,17 +7,16 @@ import (
 	"strings"
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
-	"github.com/SlawaBE/go-musthave-diploma/internal/repository"
 	"github.com/SlawaBE/go-musthave-diploma/internal/service"
 	"github.com/SlawaBE/go-musthave-diploma/internal/utils/validator"
 )
 
 type OrdersUploadHandler struct {
-	repository     *repository.OrderRepository
+	repository     OrderRepository
 	accrualService *service.AccrualService
 }
 
-func NewOrdersUploadHandler(repository *repository.OrderRepository, accrualService *service.AccrualService) *OrdersUploadHandler {
+func NewOrdersUploadHandler(repository OrderRepository, accrualService *service.AccrualService) *OrdersUploadHandler {
 	return &OrdersUploadHandler{
 		repository:     repository,
 		accrualService: accrualService,

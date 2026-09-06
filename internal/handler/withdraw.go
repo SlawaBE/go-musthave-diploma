@@ -7,18 +7,17 @@ import (
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/logger"
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
-	"github.com/SlawaBE/go-musthave-diploma/internal/repository"
 	"github.com/SlawaBE/go-musthave-diploma/internal/service"
 	"github.com/SlawaBE/go-musthave-diploma/internal/utils/validator"
 	"go.uber.org/zap"
 )
 
 type WitdrawUploadHandler struct {
-	repository      *repository.WithdrawRepository
-	orderRepository *repository.OrderRepository
+	repository      WithdrawRepository
+	orderRepository OrderRepository
 }
 
-func NewWitdrawUploadHandler(repository *repository.WithdrawRepository, orderRepository *repository.OrderRepository) *WitdrawUploadHandler {
+func NewWitdrawUploadHandler(repository WithdrawRepository, orderRepository OrderRepository) *WitdrawUploadHandler {
 	return &WitdrawUploadHandler{
 		repository:      repository,
 		orderRepository: orderRepository,
