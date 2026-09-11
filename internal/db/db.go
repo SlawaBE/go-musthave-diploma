@@ -5,22 +5,14 @@ import (
 	"embed"
 	"fmt"
 
-	"github.com/SlawaBE/go-musthave-diploma/internal/logger"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"go.uber.org/zap"
 )
 
 func NewDB(databaseDSN string) (*sql.DB, error) {
-	db, err := sql.Open("pgx", databaseDSN)
-	if err != nil {
-		logger.Log.Fatal("error open db connect", zap.Error(err))
-		return nil, err
-	}
-
-	return db, nil
+	return sql.Open("pgx", databaseDSN)
 }
 
 //go:embed migrations/*.sql

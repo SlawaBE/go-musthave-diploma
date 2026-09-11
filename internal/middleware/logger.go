@@ -1,11 +1,11 @@
 package middleware
 
 import (
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/logger"
-	"go.uber.org/zap"
 )
 
 type responseWriter struct {
@@ -33,11 +33,11 @@ func RequestLogger(handler http.Handler) http.Handler {
 		handler.ServeHTTP(rw, r)
 
 		logger.Log.Info("receive http request",
-			zap.String("uri", r.RequestURI),
-			zap.String("method", r.Method),
-			zap.Duration("duration", time.Since(start)),
-			zap.Int("status", rw.status),
-			zap.Int("size", rw.size),
+			slog.String("uri", r.RequestURI),
+			slog.String("method", r.Method),
+			slog.String("duration", time.Since(start).String()),
+			slog.Int("status", rw.status),
+			slog.Int("size", rw.size),
 		)
 	})
 }

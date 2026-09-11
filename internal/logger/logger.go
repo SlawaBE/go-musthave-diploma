@@ -1,28 +1,26 @@
 package logger
 
 import (
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"log/slog"
+	"os"
 )
 
-var Log *zap.Logger = zap.NewNop()
+var Log *slog.Logger = slog.New(slog.DiscardHandler)
 
 func Initialize(level string) error {
-	lvl, err := zap.ParseAtomicLevel(level)
-	if err != nil {
+	var lvl slog.Level
+	if err := lvl.UnmarshalText([]byte(level)); err != nil {
 		return err
 	}
 
-	cfg := zap.NewProductionConfig()
-	cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	cfg.EncoderConfig.TimeKey = "time"
-	cfg.Level = lvl
+	handler := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{
+		Level: lvl,
+	})
 
-	zl, err := cfg.Build()
-	if err != nil {
-		return err
-	}
-
-	Log = zl
+	Log = slog.New(handler)
 	return nil
+}
+
+func Err(err error) slog.Attr {
+	return slog.Any("error", err)
 }

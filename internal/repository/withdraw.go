@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/logger"
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
-	"go.uber.org/zap"
 )
 
 type WithdrawRepository struct {
@@ -44,7 +44,7 @@ func (w *WithdrawRepository) GetSumOfWithdraw(ctx context.Context, userID uint64
 
 	var sum float32
 	if err := row.Scan(&sum); err != nil {
-		logger.Log.Error("error sum accrual", zap.Uint64("userId", userID), zap.Error(err))
+		logger.Log.Error("error sum accrual", slog.Uint64("userId", userID), logger.Err(err))
 		return nil, err
 	}
 
@@ -64,23 +64,23 @@ func (w *WithdrawRepository) SaveWitdrawn(ctx context.Context, withdraw model.Wi
 		withdraw.UserID,
 	).Scan(&dummy)
 	if err != nil {
-		logger.Log.Error("Error blocking user", zap.Error(err))
+		logger.Log.Error("Error blocking user", logger.Err(err))
 		return err
 	}
 
 	res, err := tx.ExecContext(ctx, InsertWithdraw, withdraw.UserID, withdraw.OrderNumber, withdraw.Total)
 	if err != nil {
-		logger.Log.Error("Error update balance", zap.Error(err))
+		logger.Log.Error("Error update balance", logger.Err(err))
 		return err
 	}
 	affectedRows, err := res.RowsAffected()
 	if err != nil {
-		logger.Log.Error("Error update balance", zap.Error(err))
+		logger.Log.Error("Error update balance", logger.Err(err))
 		return err
 	}
 	if affectedRows == 0 {
 		err = fmt.Errorf("%w: user_id=%d", ErrInsufficientFunds, withdraw.UserID)
-		logger.Log.Error("Balance not updated", zap.Error(err))
+		logger.Log.Error("Balance not updated", logger.Err(err))
 		return err
 	}
 
@@ -91,7 +91,7 @@ func (w *WithdrawRepository) Withdrawals(ctx context.Context, userID uint64) ([]
 	withdrawals := make([]model.Withdraw, 0)
 	rows, err := w.db.QueryContext(ctx, SelectWithdrawByUserID, userID)
 	if err != nil {
-		logger.Log.Error("error query", zap.Error(err))
+		logger.Log.Error("error query", logger.Err(err))
 		return nil, err
 	}
 	defer rows.Close()
@@ -99,7 +99,7 @@ func (w *WithdrawRepository) Withdrawals(ctx context.Context, userID uint64) ([]
 	for rows.Next() {
 		var withdraw model.Withdraw
 		if err = rows.Scan(&withdraw.ID, &withdraw.UserID, &withdraw.OrderNumber, &withdraw.Total, &withdraw.ProcessedAt); err != nil {
-			logger.Log.Error("error get withdraw", zap.Uint64("userId", userID), zap.Error(err))
+			logger.Log.Error("error get withdraw", slog.Uint64("userId", userID), logger.Err(err))
 			return nil, err
 		}
 		withdrawals = append(withdrawals, withdraw)
@@ -107,7 +107,7 @@ func (w *WithdrawRepository) Withdrawals(ctx context.Context, userID uint64) ([]
 
 	err = rows.Err()
 	if err != nil {
-		logger.Log.Error("error get withdrawals", zap.Error(err))
+		logger.Log.Error("error get withdrawals", logger.Err(err))
 		return nil, err
 	}
 	return withdrawals, nil

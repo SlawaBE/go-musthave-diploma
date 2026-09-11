@@ -8,7 +8,6 @@ import (
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/logger"
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
-	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -40,7 +39,7 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var request model.LoginUserRequest
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&request); err != nil {
-		logger.Log.Error("cannot decode request JSON body", zap.Error(err))
+		logger.Log.Error("cannot decode request JSON body", logger.Err(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"log/slog"
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/logger"
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
-	"go.uber.org/zap"
 )
 
 type OrderRepository struct {
@@ -33,27 +33,27 @@ const (
 func (w *OrderRepository) SaveOrder(ctx context.Context, order *model.Order) error {
 	tx, err := w.db.Begin()
 	if err != nil {
-		logger.Log.Error("error begin transaction", zap.Error(err))
+		logger.Log.Error("error begin transaction", logger.Err(err))
 		return err
 	}
 	defer tx.Rollback()
 
 	stmt, err := tx.PrepareContext(ctx, InsertOrder)
 	if err != nil {
-		logger.Log.Error("error prepare statement", zap.Error(err))
+		logger.Log.Error("error prepare statement", logger.Err(err))
 		return err
 	}
 	defer stmt.Close()
 
 	err = stmt.QueryRowContext(ctx, order.UserID, order.Number, order.Status).Scan(&order.ID)
 	if err != nil {
-		logger.Log.Error("error exec statement", zap.Error(err))
+		logger.Log.Error("error exec statement", logger.Err(err))
 		return err
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		logger.Log.Error("error commit transaction", zap.Error(err))
+		logger.Log.Error("error commit transaction", logger.Err(err))
 	}
 	return err
 }
@@ -64,7 +64,7 @@ func (w *OrderRepository) GetOrderByNumber(ctx context.Context, number string) (
 	var err error
 
 	if err = row.Scan(&order.ID, &order.UserID, &order.Number, &order.Status, &order.UploadedAt, &order.Accrual); err != nil {
-		logger.Log.Error("error get order", zap.String("number", number), zap.Error(err))
+		logger.Log.Error("error get order", slog.String("number", number), logger.Err(err))
 		return nil, err
 	}
 	return &order, nil
@@ -74,7 +74,7 @@ func (w *OrderRepository) Orders(ctx context.Context, userID uint64) ([]model.Or
 	orders := make([]model.Order, 0)
 	rows, err := w.db.QueryContext(ctx, SelectOrderByUserID, userID)
 	if err != nil {
-		logger.Log.Error("error query", zap.Error(err))
+		logger.Log.Error("error query", logger.Err(err))
 		return nil, err
 	}
 	defer rows.Close()
@@ -82,7 +82,7 @@ func (w *OrderRepository) Orders(ctx context.Context, userID uint64) ([]model.Or
 	for rows.Next() {
 		var order model.Order
 		if err = rows.Scan(&order.ID, &order.UserID, &order.Number, &order.Status, &order.UploadedAt, &order.Accrual); err != nil {
-			logger.Log.Error("error get order", zap.Uint64("userId", userID), zap.Error(err))
+			logger.Log.Error("error get order", slog.Uint64("userId", userID), logger.Err(err))
 			return nil, err
 		}
 		orders = append(orders, order)
@@ -90,7 +90,7 @@ func (w *OrderRepository) Orders(ctx context.Context, userID uint64) ([]model.Or
 
 	err = rows.Err()
 	if err != nil {
-		logger.Log.Error("error get orders", zap.Error(err))
+		logger.Log.Error("error get orders", logger.Err(err))
 		return nil, err
 	}
 	return orders, nil
@@ -101,7 +101,7 @@ func (w *OrderRepository) GetSumOfAccrual(ctx context.Context, userID uint64) (*
 
 	var sum float32
 	if err := row.Scan(&sum); err != nil {
-		logger.Log.Error("error sum accrual", zap.Uint64("userId", userID), zap.Error(err))
+		logger.Log.Error("error sum accrual", slog.Uint64("userId", userID), logger.Err(err))
 		return nil, err
 	}
 
@@ -114,7 +114,7 @@ func (w *OrderRepository) GetOrderByID(ctx context.Context, orderID uint64) (*mo
 	var err error
 
 	if err = row.Scan(&order.ID, &order.UserID, &order.Number, &order.Status, &order.UploadedAt, &order.Accrual); err != nil {
-		logger.Log.Error("error get order", zap.Uint64("order_id", orderID), zap.Error(err))
+		logger.Log.Error("error get order", slog.Uint64("order_id", orderID), logger.Err(err))
 		return nil, err
 	}
 	return &order, nil
@@ -123,27 +123,27 @@ func (w *OrderRepository) GetOrderByID(ctx context.Context, orderID uint64) (*mo
 func (w *OrderRepository) UpdateStatus(ctx context.Context, orderID uint64, status model.OrderStatus) error {
 	tx, err := w.db.Begin()
 	if err != nil {
-		logger.Log.Error("error begin transaction", zap.Error(err))
+		logger.Log.Error("error begin transaction", logger.Err(err))
 		return err
 	}
 	defer tx.Rollback()
 
 	stmt, err := tx.PrepareContext(ctx, UpdateOrderStatus)
 	if err != nil {
-		logger.Log.Error("error prepare statement", zap.Error(err))
+		logger.Log.Error("error prepare statement", logger.Err(err))
 		return err
 	}
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, orderID, status)
 	if err != nil {
-		logger.Log.Error("error exec statement", zap.Error(err))
+		logger.Log.Error("error exec statement", logger.Err(err))
 		return err
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		logger.Log.Error("error commit transaction", zap.Error(err))
+		logger.Log.Error("error commit transaction", logger.Err(err))
 	}
 	return err
 }
@@ -151,27 +151,27 @@ func (w *OrderRepository) UpdateStatus(ctx context.Context, orderID uint64, stat
 func (w *OrderRepository) SetAccrual(ctx context.Context, orderID uint64, accrual *float32) error {
 	tx, err := w.db.Begin()
 	if err != nil {
-		logger.Log.Error("error begin transaction", zap.Error(err))
+		logger.Log.Error("error begin transaction", logger.Err(err))
 		return err
 	}
 	defer tx.Rollback()
 
 	stmt, err := tx.PrepareContext(ctx, SetAccrual)
 	if err != nil {
-		logger.Log.Error("error prepare statement", zap.Error(err))
+		logger.Log.Error("error prepare statement", logger.Err(err))
 		return err
 	}
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, orderID, accrual, model.OrderStatusProcessed)
 	if err != nil {
-		logger.Log.Error("error exec statement", zap.Error(err))
+		logger.Log.Error("error exec statement", logger.Err(err))
 		return err
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		logger.Log.Error("error commit transaction", zap.Error(err))
+		logger.Log.Error("error commit transaction", logger.Err(err))
 	}
 	return err
 }
@@ -180,7 +180,7 @@ func (w *OrderRepository) GetNOldestNotProcessedOrderIDs(ctx context.Context, li
 	ids := make([]uint64, 0)
 	rows, err := w.db.QueryContext(ctx, GetNOldestNotProcessedOrderIDs, limit)
 	if err != nil {
-		logger.Log.Error("error query", zap.Error(err))
+		logger.Log.Error("error query", logger.Err(err))
 		return nil, err
 	}
 	defer rows.Close()
@@ -188,7 +188,7 @@ func (w *OrderRepository) GetNOldestNotProcessedOrderIDs(ctx context.Context, li
 	for rows.Next() {
 		var id uint64
 		if err = rows.Scan(&id); err != nil {
-			logger.Log.Error("error get order", zap.Error(err))
+			logger.Log.Error("error get order", logger.Err(err))
 			return nil, err
 		}
 		ids = append(ids, id)
@@ -196,7 +196,7 @@ func (w *OrderRepository) GetNOldestNotProcessedOrderIDs(ctx context.Context, li
 
 	err = rows.Err()
 	if err != nil {
-		logger.Log.Error("error get orders", zap.Error(err))
+		logger.Log.Error("error get orders", logger.Err(err))
 		return nil, err
 	}
 	return ids, nil

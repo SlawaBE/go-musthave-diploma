@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
 	"github.com/SlawaBE/go-musthave-diploma/internal/repository"
 	"github.com/go-resty/resty/v2"
-	"go.uber.org/zap"
 )
 
 type AccrualService struct {
@@ -72,7 +72,7 @@ func (a *AccrualService) runPollerOldOrders(ctx context.Context) {
 		case <-ticker.C:
 			ids, err := a.orderRepository.GetNOldestNotProcessedOrderIDs(ctx, a.pollLimit)
 			if err != nil {
-				logger.Log.Error("error polling orders", zap.Error(err))
+				logger.Log.Error("error polling orders", logger.Err(err))
 				continue
 			}
 			for _, id := range ids {
@@ -88,9 +88,9 @@ func (a *AccrualService) work(ctx context.Context, jobs <-chan uint64) {
 		case <-ctx.Done():
 			return
 		case orderID := <-jobs:
-			logger.Log.Info("Start processing order", zap.Uint64("order_id", orderID))
+			logger.Log.Info("Start processing order", slog.Uint64("order_id", orderID))
 			status := a.process(ctx, orderID)
-			logger.Log.Info("End processing order", zap.Uint64("order_id", orderID), zap.Any("status", status))
+			logger.Log.Info("End processing order", slog.Uint64("order_id", orderID), slog.Any("status", status))
 		}
 	}
 }
@@ -98,24 +98,24 @@ func (a *AccrualService) work(ctx context.Context, jobs <-chan uint64) {
 func (a *AccrualService) process(ctx context.Context, orderID uint64) model.OrderStatus {
 	order, err := a.orderRepository.GetOrderByID(ctx, orderID)
 	if err != nil {
-		logger.Log.Error("error getting order", zap.Error(err))
+		logger.Log.Error("error getting order", logger.Err(err))
 		return ""
 	}
 
 	if order.Status == model.OrderStatusInvalid || order.Status == model.OrderStatusProcessed {
-		logger.Log.Info("processing not requiered", zap.Uint64("order_id", orderID), zap.Any("status", order.Status))
+		logger.Log.Info("processing not requiered", slog.Uint64("order_id", orderID), slog.Any("status", order.Status))
 		return order.Status
 	}
 
 	err = a.orderRepository.UpdateStatus(ctx, orderID, model.OrderStatusProcessing)
 	if err != nil {
-		logger.Log.Error("error getting order", zap.Error(err))
+		logger.Log.Error("error getting order", logger.Err(err))
 		return ""
 	}
 
 	asr, err := a.getAccrual(order.Number)
 	if err != nil {
-		logger.Log.Error("error getting accrual", zap.Error(err))
+		logger.Log.Error("error getting accrual", logger.Err(err))
 		return ""
 	}
 
@@ -131,7 +131,7 @@ func (a *AccrualService) process(ctx context.Context, orderID uint64) model.Orde
 		err = a.orderRepository.UpdateStatus(ctx, order.ID, order.Status)
 	}
 	if err != nil {
-		logger.Log.Error("error updating status", zap.Uint64("order_id", order.ID), zap.Any("status", order.Status))
+		logger.Log.Error("error updating status", slog.Uint64("order_id", order.ID), slog.Any("status", order.Status))
 		return ""
 	}
 

@@ -11,7 +11,6 @@ import (
 	"github.com/SlawaBE/go-musthave-diploma/internal/repository"
 	"github.com/SlawaBE/go-musthave-diploma/internal/service"
 	"github.com/SlawaBE/go-musthave-diploma/internal/utils/validator"
-	"go.uber.org/zap"
 )
 
 type WitdrawUploadHandler struct {
@@ -41,7 +40,7 @@ func (h *WitdrawUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	var request model.WithdrawRequest
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&request); err != nil {
-		logger.Log.Error("cannot decode request JSON body", zap.Error(err))
+		logger.Log.Error("cannot decode request JSON body", logger.Err(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -78,7 +77,7 @@ func (h *WitdrawUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "withdraw exists yet", http.StatusInternalServerError)
 		return
 	case err != nil:
-		logger.Log.Error("Error update balance", zap.Error(err))
+		logger.Log.Error("Error update balance", logger.Err(err))
 		http.Error(w, "Error update balance", http.StatusInternalServerError)
 		return
 	}

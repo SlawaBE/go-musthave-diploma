@@ -13,14 +13,10 @@ import (
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func TestLoginHandler_ServeHTTP(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	defer logger.Sync()
-
 	testuser := "testuser"
 	password := "password123"
 	bytesPasswordHash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

@@ -9,7 +9,6 @@ import (
 	"github.com/SlawaBE/go-musthave-diploma/internal/logger"
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
 	"github.com/jackc/pgx/v5/pgconn"
-	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -41,7 +40,7 @@ func (h *RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var request model.RegisterUserRequest
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&request); err != nil {
-		logger.Log.Error("cannot decode request JSON body", zap.Error(err))
+		logger.Log.Error("cannot decode request JSON body", logger.Err(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -53,7 +52,7 @@ func (h *RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
-		logger.Log.Error("Error hashing password", zap.Error(err))
+		logger.Log.Error("Error hashing password", logger.Err(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

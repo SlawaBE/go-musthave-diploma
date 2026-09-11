@@ -16,7 +16,6 @@ import (
 	"github.com/SlawaBE/go-musthave-diploma/internal/middleware"
 	"github.com/SlawaBE/go-musthave-diploma/internal/repository"
 	"github.com/SlawaBE/go-musthave-diploma/internal/service"
-	"go.uber.org/zap"
 )
 
 func Run(config config.Config) {
@@ -39,6 +38,7 @@ func Run(config config.Config) {
 func initDatabase(config config.Config) *sql.DB {
 	database, err := db.NewDB(config.DatabaseURI)
 	if err != nil {
+		logger.Log.Error("error open db connect", logger.Err(err))
 		os.Exit(2)
 	}
 
@@ -46,13 +46,13 @@ func initDatabase(config config.Config) *sql.DB {
 	defer cancel()
 	err = database.PingContext(ctx)
 	if err != nil {
-		logger.Log.Fatal("Error ping database", zap.Error(err))
+		logger.Log.Error("Error ping database", logger.Err(err))
 		os.Exit(3)
 	}
 
 	err = db.RunMigrations(database, config.DatabaseURI)
 	if err != nil {
-		logger.Log.Fatal("Error migration", zap.Error(err))
+		logger.Log.Error("Error migration", logger.Err(err))
 		os.Exit(4)
 	}
 	return database
