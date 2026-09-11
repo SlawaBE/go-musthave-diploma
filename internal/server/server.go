@@ -16,7 +16,6 @@ import (
 	"github.com/SlawaBE/go-musthave-diploma/internal/middleware"
 	"github.com/SlawaBE/go-musthave-diploma/internal/repository"
 	"github.com/SlawaBE/go-musthave-diploma/internal/service"
-	"github.com/go-chi/chi"
 	"go.uber.org/zap"
 )
 
@@ -59,8 +58,8 @@ func initDatabase(config config.Config) *sql.DB {
 	return database
 }
 
-func InitRouter(database *sql.DB, config config.Config) chi.Router {
-	r := chi.NewRouter()
+func InitRouter(database *sql.DB, config config.Config) *http.ServeMux {
+	r := http.NewServeMux()
 
 	if config.JWTSecret == "" {
 		config.JWTSecret = rand.Text()
@@ -86,19 +85,14 @@ func InitRouter(database *sql.DB, config config.Config) chi.Router {
 
 	authMiddleware := ts.CreateAuthMiddleware()
 
-	r.Route("/api/user", func(r chi.Router) {
-		r.Handle("/register", registerHandler)
-		r.Handle("/login", loginHandler)
+	r.Handle("/api/user/register", registerHandler)
+	r.Handle("/api/user/login", loginHandler)
 
-		r.Group(func(r chi.Router) {
-			r.Use(authMiddleware)
-			r.Post("/orders", ordersUploadHandler.ServeHTTP)
-			r.Get("/orders", ordersListHandler.ServeHTTP)
-			r.Get("/balance", balanceHandler.ServeHTTP)
-			r.Post("/balance/withdraw", withdrawUploadHandler.ServeHTTP)
-			r.Get("/withdrawals", withdrawListHandler.ServeHTTP)
-		})
-	})
+	r.Handle("POST /api/user/orders", authMiddleware(ordersUploadHandler))
+	r.Handle("GET /api/user/orders", authMiddleware(ordersListHandler))
+	r.Handle("GET /api/user/balance", authMiddleware(balanceHandler))
+	r.Handle("POST /api/user/balance/withdraw", authMiddleware(withdrawUploadHandler))
+	r.Handle("GET /api/user/withdrawals", authMiddleware(withdrawListHandler))
 
 	return r
 }
