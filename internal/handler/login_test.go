@@ -11,10 +11,10 @@ import (
 	"testing"
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
-	"github.com/SlawaBE/go-musthave-diploma/internal/utils/hash"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func TestLoginHandler_ServeHTTP(t *testing.T) {
@@ -23,7 +23,8 @@ func TestLoginHandler_ServeHTTP(t *testing.T) {
 
 	testuser := "testuser"
 	password := "password123"
-	passwordHash := hex.EncodeToString(hash.Sha256([]byte(password)))
+	bytesPasswordHash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	passwordHash := hex.EncodeToString(bytesPasswordHash)
 
 	tests := []struct {
 		name           string
@@ -52,38 +53,38 @@ func TestLoginHandler_ServeHTTP(t *testing.T) {
 			expectedCookie: true,
 		},
 		{
-			name:        "wrong request method",
-			method:      http.MethodGet,
-			contentType: "application/json",
-			body:        nil,
-			setupMocks: func(repo *MockUserRepository, token *MockTokenService) {},
+			name:           "wrong request method",
+			method:         http.MethodGet,
+			contentType:    "application/json",
+			body:           nil,
+			setupMocks:     func(repo *MockUserRepository, token *MockTokenService) {},
 			expectedStatus: http.StatusMethodNotAllowed,
 			expectedCookie: false,
 		},
 		{
-			name:        "wrong Content-Type",
-			method:      http.MethodPost,
-			contentType: "text/plain",
-			body:        nil,
-			setupMocks: func(repo *MockUserRepository, token *MockTokenService) {},
+			name:           "wrong Content-Type",
+			method:         http.MethodPost,
+			contentType:    "text/plain",
+			body:           nil,
+			setupMocks:     func(repo *MockUserRepository, token *MockTokenService) {},
 			expectedStatus: http.StatusBadRequest,
 			expectedCookie: false,
 		},
 		{
-			name:        "empty login",
-			method:      http.MethodPost,
-			contentType: "application/json",
-			body:        model.LoginUserRequest{Login: "", Password: password},
-			setupMocks: func(repo *MockUserRepository, token *MockTokenService) {},
+			name:           "empty login",
+			method:         http.MethodPost,
+			contentType:    "application/json",
+			body:           model.LoginUserRequest{Login: "", Password: password},
+			setupMocks:     func(repo *MockUserRepository, token *MockTokenService) {},
 			expectedStatus: http.StatusBadRequest,
 			expectedCookie: false,
 		},
 		{
-			name:        "invalid JSON",
-			method:      http.MethodPost,
-			contentType: "application/json",
-			body:        "{invalid json",
-			setupMocks: func(repo *MockUserRepository, token *MockTokenService) {},
+			name:           "invalid JSON",
+			method:         http.MethodPost,
+			contentType:    "application/json",
+			body:           "{invalid json",
+			setupMocks:     func(repo *MockUserRepository, token *MockTokenService) {},
 			expectedStatus: http.StatusBadRequest,
 			expectedCookie: false,
 		},

@@ -8,9 +8,9 @@ import (
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/logger"
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
-	"github.com/SlawaBE/go-musthave-diploma/internal/utils/hash"
 	"github.com/jackc/pgx/v5/pgconn"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type RegisterHandler struct {
@@ -51,12 +51,19 @@ func (h *RegisterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := model.User{
-		Login:        request.Login,
-		PasswordHash: hex.EncodeToString(hash.Sha256([]byte(request.Password))),
+	hash, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
+	if err != nil {
+		logger.Log.Error("Error hashing password", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	err := h.repository.SaveUser(r.Context(), &user)
+	user := model.User{
+		Login:        request.Login,
+		PasswordHash: hex.EncodeToString(hash),
+	}
+
+	err = h.repository.SaveUser(r.Context(), &user)
 
 	if err != nil {
 		if IsNotUniqError(err) {

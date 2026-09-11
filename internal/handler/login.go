@@ -2,13 +2,14 @@ package handler
 
 import (
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/logger"
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
-	"github.com/SlawaBE/go-musthave-diploma/internal/utils/hash"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type LoginHandler struct {
@@ -60,7 +61,13 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !hash.CheckPassword(request.Password, dbUser.PasswordHash) {
+	hash, err := hex.DecodeString(dbUser.PasswordHash)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if bcrypt.CompareHashAndPassword(hash, []byte(request.Password)) != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
