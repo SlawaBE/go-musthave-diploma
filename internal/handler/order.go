@@ -78,8 +78,8 @@ func (h *OrdersUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 				return
 			}
 			if order.UserID == userID {
-				if (order.Status == model.OrderStatusNew || order.Status == model.OrderStatusProcessing) {
-					h.accrualService.AddOrder(order.ID)
+				if order.Status == model.OrderStatusNew || order.Status == model.OrderStatusProcessing {
+					h.accrualService.AddOrder(r.Context(), order.ID)
 				}
 				w.WriteHeader(http.StatusOK)
 				return
@@ -91,7 +91,7 @@ func (h *OrdersUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	h.accrualService.AddOrder(order.ID)
+	h.accrualService.AddOrder(r.Context(), order.ID)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)

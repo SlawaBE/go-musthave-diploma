@@ -50,11 +50,16 @@ func (a *AccrualService) Run(ctx context.Context) {
 		})
 	}
 
-	go a.runPollerOldOrders(ctx)
+	a.wg.Go(func() {
+		a.runPollerOldOrders(ctx)
+	})
 }
 
-func (a *AccrualService) AddOrder(orderID uint64) {
-	a.jobs <- orderID
+func (a *AccrualService) AddOrder(ctx context.Context, orderID uint64) {
+	select {
+	case a.jobs <- orderID:
+	case <-ctx.Done():
+	}
 }
 
 func (a *AccrualService) Stop() {
@@ -76,7 +81,10 @@ func (a *AccrualService) runPollerOldOrders(ctx context.Context) {
 				continue
 			}
 			for _, id := range ids {
-				a.jobs <- id
+				select {
+				case a.jobs <- id:
+				case <-ctx.Done():
+				}
 			}
 		}
 	}
@@ -87,7 +95,10 @@ func (a *AccrualService) work(ctx context.Context, jobs <-chan uint64) {
 		select {
 		case <-ctx.Done():
 			return
-		case orderID := <-jobs:
+		case orderID, ok := <-jobs:
+			if !ok {
+				return
+			}
 			logger.Log.Info("Start processing order", slog.Uint64("order_id", orderID))
 			status := a.process(ctx, orderID)
 			logger.Log.Info("End processing order", slog.Uint64("order_id", orderID), slog.Any("status", status))
@@ -113,7 +124,7 @@ func (a *AccrualService) process(ctx context.Context, orderID uint64) model.Orde
 		return ""
 	}
 
-	asr, err := a.getAccrual(order.Number)
+	asr, err := a.getAccrual(ctx, order.Number)
 	if err != nil {
 		logger.Log.Error("error getting accrual", logger.Err(err))
 		return ""
@@ -138,8 +149,10 @@ func (a *AccrualService) process(ctx context.Context, orderID uint64) model.Orde
 	return order.Status
 }
 
-func (a *AccrualService) getAccrual(number string) (*AccrualServiceResponse, error) {
-	resp, err := a.client.R().Get(number)
+func (a *AccrualService) getAccrual(ctx context.Context, number string) (*AccrualServiceResponse, error) {
+	resp, err := a.client.R().
+		SetContext(ctx).
+		Get(number)
 	if err != nil {
 		return nil, fmt.Errorf("error getting accrual: %v", err)
 	}
