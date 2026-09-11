@@ -141,22 +141,19 @@ func (a *AccrualService) process(ctx context.Context, orderID uint64) model.Orde
 func (a *AccrualService) getAccrual(number string) (*AccrualServiceResponse, error) {
 	resp, err := a.client.R().Get(number)
 	if err != nil {
-		// logger.Log.Error("error getting accrual", zap.Error(err))
 		return nil, fmt.Errorf("error getting accrual: %v", err)
 	}
 	var asr AccrualServiceResponse
 	if resp.IsError() {
-		message := fmt.Sprintf("error getting accrual, status code: %d", resp.StatusCode())
-		// logger.Log.Error(message)
+		message := fmt.Sprintf("error getting accrual, status code=%d", resp.StatusCode())
 		return nil, errors.New(message)
 	}
 	if resp.StatusCode() == 204 {
 		message := fmt.Sprintf("order %s not registered", number)
-		// logger.Log.Error(message)
 		return nil, errors.New(message)
 	}
-	json.Unmarshal(resp.Body(), &asr)
-	return &asr, nil
+	err = json.Unmarshal(resp.Body(), &asr)
+	return &asr, err
 }
 
 var retryIntervals = []time.Duration{1 * time.Second, 3 * time.Second, 5 * time.Second}
