@@ -2,11 +2,13 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/logger"
 	"github.com/SlawaBE/go-musthave-diploma/internal/model"
+	"github.com/SlawaBE/go-musthave-diploma/internal/repository"
 	"github.com/SlawaBE/go-musthave-diploma/internal/service"
 	"github.com/SlawaBE/go-musthave-diploma/internal/utils/validator"
 	"go.uber.org/zap"
@@ -62,37 +64,22 @@ func (h *WitdrawUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	balance, err := h.orderRepository.GetSumOfAccrual(r.Context(), userID)
-	if err != nil {
-		http.Error(w, "Error calc balance", http.StatusInternalServerError)
-		return
-	}
-
-	withdrawals, err := h.repository.GetSumOfWithdraw(r.Context(), userID)
-	if err != nil {
-		http.Error(w, "Error calc balance", http.StatusInternalServerError)
-		return
-	}
-
-	if *balance-*withdrawals < request.Total {
-		http.Error(w, "Insufficient funds", http.StatusPaymentRequired)
-		return
-	}
-
 	withdraw := &model.Withdraw{
 		OrderNumber: request.OrderNumber,
 		UserID:      userID,
 		Total:       request.Total,
 	}
-	err = h.repository.SaveWitdrawn(r.Context(), *withdraw)
-	if err != nil {
-		var message string
-		if IsNotUniqError(err) {
-			message = "order number has already been used"
-		} else {
-			message = "error save withdraw"
-		}
-		http.Error(w, message, http.StatusInternalServerError)
+	err := h.repository.SaveWitdrawn(r.Context(), *withdraw)
+	switch {
+	case errors.Is(err, repository.ErrInsufficientFunds):
+		http.Error(w, "Insufficient funds", http.StatusPaymentRequired)
+		return
+	case IsNotUniqError(err):
+		http.Error(w, "withdraw exists yet", http.StatusInternalServerError)
+		return
+	case err != nil:
+		logger.Log.Error("Error update balance", zap.Error(err))
+		http.Error(w, "Error update balance", http.StatusInternalServerError)
 		return
 	}
 
