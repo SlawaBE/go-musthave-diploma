@@ -21,7 +21,7 @@ import (
 )
 
 func Run(config config.Config) {
-	logger.Initialize("info")
+	logger.Initialize(config.LogLevel)
 
 	database := initDatabase(config)
 	defer database.Close()
@@ -62,13 +62,17 @@ func initDatabase(config config.Config) *sql.DB {
 func InitRouter(database *sql.DB, config config.Config) chi.Router {
 	r := chi.NewRouter()
 
-	jwtSecret := rand.Text()
-	logger.Log.Info("JWT secret: " + jwtSecret) //TODO change to debug or delete
-	ts := service.NewTokenService(jwtSecret, time.Minute*30)
+	if config.JWTSecret == "" {
+		config.JWTSecret = rand.Text()
+		logger.Log.Warn("JWT secret is not set. generate random")
+		logger.Log.Debug("JWT secret: " + config.JWTSecret)
+	}
+
+	ts := service.NewTokenService(config.JWTSecret, time.Minute*30)
 	ur := repository.NewUserRepository(database)
 	or := repository.NewOrderRepository(database)
 	wr := repository.NewWitdrawRepository(database)
-	
+
 	as := service.NewAccrualService(config.AccrualSystemAddress, or)
 	as.Run(context.Background())
 
