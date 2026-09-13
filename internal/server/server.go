@@ -4,9 +4,11 @@ import (
 	"context"
 	"crypto/rand"
 	"database/sql"
-	"log"
+	"errors"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/SlawaBE/go-musthave-diploma/internal/config"
@@ -18,24 +20,64 @@ import (
 	"github.com/SlawaBE/go-musthave-diploma/internal/service"
 )
 
-func Run(config config.Config) {
-	logger.Initialize(config.LogLevel)
-
-	database := initDatabase(config)
-	defer database.Close()
-
-	var r http.Handler = InitRouter(database, config)
-
-	r = middleware.GZip(r)
-	r = middleware.RequestLogger(r)
-
-	err := http.ListenAndServe(config.RunAddress, r)
-	if err != nil {
-		log.Fatal(err)
-	}
+type App struct {
+	httpServer     *http.Server
+	accrualService *service.AccrualService
 }
 
-func initDatabase(config config.Config) *sql.DB {
+func NewApp(config.Config) *App {
+	return &App{}
+}
+
+func (a *App) Run(config config.Config) {
+	logger.Initialize(config.LogLevel)
+	logger.Log.Info("Starting server")
+	logger.Log.Info("Logger has been initialized")
+
+	database := a.initDatabase(config)
+	defer database.Close()
+	logger.Log.Info("Database has been initialized")
+
+	var r http.Handler = a.initRouter(database, config)
+	r = middleware.GZip(r)
+	r = middleware.RequestLogger(r)
+	logger.Log.Info("Router has been initialized")
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	a.httpServer = &http.Server{
+		Addr:    config.RunAddress,
+		Handler: r,
+	}
+
+	a.accrualService.Run(ctx)
+
+	go func() {
+		logger.Log.Info("Server started")
+		if err := a.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Log.Error("Server error", "err", err)
+		}
+	}()
+
+	<-ctx.Done()
+	logger.Log.Info("Graceful shutdown")
+
+	stop()
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer shutdownCancel()
+
+	if err := a.httpServer.Shutdown(shutdownCtx); err != nil {
+		logger.Log.Error("Server shutdown error", logger.Err(err))
+	}
+
+	a.accrualService.Stop()
+
+	logger.Log.Info("Server has been stopped")
+}
+
+func (a *App) initDatabase(config config.Config) *sql.DB {
 	database, err := db.NewDB(config.DatabaseURI)
 	if err != nil {
 		logger.Log.Error("error open db connect", logger.Err(err))
@@ -58,7 +100,7 @@ func initDatabase(config config.Config) *sql.DB {
 	return database
 }
 
-func InitRouter(database *sql.DB, config config.Config) *http.ServeMux {
+func (a *App) initRouter(database *sql.DB, config config.Config) *http.ServeMux {
 	r := http.NewServeMux()
 
 	if config.JWTSecret == "" {
@@ -73,7 +115,7 @@ func InitRouter(database *sql.DB, config config.Config) *http.ServeMux {
 	wr := repository.NewWithdrawRepository(database)
 
 	as := service.NewAccrualService(config.AccrualSystemAddress, or)
-	as.Run(context.Background())
+	a.accrualService = as
 
 	registerHandler := handler.NewRegisterHandler(ur, ts)
 	loginHandler := handler.NewLoginHandler(ur, ts)

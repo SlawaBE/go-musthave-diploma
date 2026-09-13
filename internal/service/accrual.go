@@ -47,12 +47,15 @@ func (a *AccrualService) Run(ctx context.Context) {
 	for range a.workersCount {
 		a.wg.Go(func() {
 			a.work(ctx, a.jobs)
+			logger.Log.Info("Accrual service worker stopped")
 		})
 	}
 
 	a.wg.Go(func() {
 		a.runPollerOldOrders(ctx)
+		logger.Log.Info("Accrual service poller stopped")
 	})
+	logger.Log.Info("Accrual service started")
 }
 
 func (a *AccrualService) AddOrder(ctx context.Context, orderID uint64) {
@@ -63,8 +66,10 @@ func (a *AccrualService) AddOrder(ctx context.Context, orderID uint64) {
 }
 
 func (a *AccrualService) Stop() {
+	logger.Log.Info("Stop accrual service")
 	close(a.jobs)
 	a.wg.Wait()
+	logger.Log.Info("Accrual service stopped")
 }
 
 func (a *AccrualService) runPollerOldOrders(ctx context.Context) {

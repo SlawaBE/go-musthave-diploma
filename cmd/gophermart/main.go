@@ -14,5 +14,6 @@ func main() {
 		fmt.Println("Error reading configuration")
 		os.Exit(1)
 	}
-	server.Run(conf)
+	app := server.NewApp(conf)
+	app.Run(conf)
 }
