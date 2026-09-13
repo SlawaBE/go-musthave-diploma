@@ -13,19 +13,19 @@ import (
 	"github.com/SlawaBE/go-musthave-diploma/internal/utils/validator"
 )
 
-type WitdrawUploadHandler struct {
+type WithdrawUploadHandler struct {
 	repository      WithdrawRepository
 	orderRepository OrderRepository
 }
 
-func NewWitdrawUploadHandler(repository WithdrawRepository, orderRepository OrderRepository) *WitdrawUploadHandler {
-	return &WitdrawUploadHandler{
+func NewWithdrawUploadHandler(repository WithdrawRepository, orderRepository OrderRepository) *WithdrawUploadHandler {
+	return &WithdrawUploadHandler{
 		repository:      repository,
 		orderRepository: orderRepository,
 	}
 }
 
-func (h *WitdrawUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *WithdrawUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -68,7 +68,7 @@ func (h *WitdrawUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		UserID:      userID,
 		Total:       request.Total,
 	}
-	err := h.repository.SaveWitdrawn(r.Context(), *withdraw)
+	err := h.repository.SaveWithdraw(r.Context(), *withdraw)
 	switch {
 	case errors.Is(err, repository.ErrInsufficientFunds):
 		http.Error(w, "Insufficient funds", http.StatusPaymentRequired)

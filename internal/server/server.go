@@ -70,7 +70,7 @@ func InitRouter(database *sql.DB, config config.Config) *http.ServeMux {
 	ts := service.NewTokenService(config.JWTSecret, time.Minute*30)
 	ur := repository.NewUserRepository(database)
 	or := repository.NewOrderRepository(database)
-	wr := repository.NewWitdrawRepository(database)
+	wr := repository.NewWithdrawRepository(database)
 
 	as := service.NewAccrualService(config.AccrualSystemAddress, or)
 	as.Run(context.Background())
@@ -80,7 +80,7 @@ func InitRouter(database *sql.DB, config config.Config) *http.ServeMux {
 	ordersUploadHandler := handler.NewOrdersUploadHandler(or, as)
 	ordersListHandler := handler.NewOrdersListHandler(or)
 	balanceHandler := handler.NewBalanceHandler(or, wr)
-	withdrawUploadHandler := handler.NewWitdrawUploadHandler(wr, or)
+	withdrawUploadHandler := handler.NewWithdrawUploadHandler(wr, or)
 	withdrawListHandler := handler.NewWithdrawListHandler(wr)
 
 	authMiddleware := ts.CreateAuthMiddleware()

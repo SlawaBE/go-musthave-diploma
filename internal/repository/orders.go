@@ -20,14 +20,14 @@ func NewOrderRepository(db *sql.DB) *OrderRepository {
 }
 
 const (
-	InsertOrder                    = `INSERT INTO orders (user_id, number, status) VALUES ($1, $2, $3) RETURNING id;`
-	SelectOrderByNumber            = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE number = $1;`
-	SelectOrderByUserID            = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE user_id = $1 ORDER BY uploaded_at DESC;`
-	SelectSumAccrualByUserID       = `SELECT coalesce(sum(accrual), 0) as total FROM orders WHERE user_id = $1;`
-	SelectOrderByID                = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE id = $1;`
-	UpdateOrderStatus              = `UPDATE orders SET status = $2 WHERE id = $1;`
-	SetAccrual                     = `UPDATE orders SET accrual = $2, status = $3 WHERE id = $1;`
-	GetNOldestNotProcessedOrderIDs = `SELECT id FROM orders WHERE status = 'NEW' or status = 'PROCESSING' ORDER BY uploaded_at ASC LIMIT $1`
+	insertOrder                    = `INSERT INTO orders (user_id, number, status) VALUES ($1, $2, $3) RETURNING id;`
+	selectOrderByNumber            = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE number = $1;`
+	selectOrderByUserID            = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE user_id = $1 ORDER BY uploaded_at DESC;`
+	selectSumAccrualByUserID       = `SELECT coalesce(sum(accrual), 0) as total FROM orders WHERE user_id = $1;`
+	selectOrderByID                = `SELECT id, user_id, number, status, uploaded_at, accrual FROM orders WHERE id = $1;`
+	updateOrderStatus              = `UPDATE orders SET status = $2 WHERE id = $1;`
+	setAccrual                     = `UPDATE orders SET accrual = $2, status = $3 WHERE id = $1;`
+	getNOldestNotProcessedOrderIDs = `SELECT id FROM orders WHERE status = 'NEW' or status = 'PROCESSING' ORDER BY uploaded_at ASC LIMIT $1`
 )
 
 func (w *OrderRepository) SaveOrder(ctx context.Context, order *model.Order) error {
@@ -38,7 +38,7 @@ func (w *OrderRepository) SaveOrder(ctx context.Context, order *model.Order) err
 	}
 	defer tx.Rollback()
 
-	stmt, err := tx.PrepareContext(ctx, InsertOrder)
+	stmt, err := tx.PrepareContext(ctx, insertOrder)
 	if err != nil {
 		logger.Log.Error("error prepare statement", logger.Err(err))
 		return err
@@ -60,7 +60,7 @@ func (w *OrderRepository) SaveOrder(ctx context.Context, order *model.Order) err
 
 func (w *OrderRepository) GetOrderByNumber(ctx context.Context, number string) (*model.Order, error) {
 	var order model.Order
-	row := w.db.QueryRowContext(ctx, SelectOrderByNumber, number)
+	row := w.db.QueryRowContext(ctx, selectOrderByNumber, number)
 	var err error
 
 	if err = row.Scan(&order.ID, &order.UserID, &order.Number, &order.Status, &order.UploadedAt, &order.Accrual); err != nil {
@@ -72,7 +72,7 @@ func (w *OrderRepository) GetOrderByNumber(ctx context.Context, number string) (
 
 func (w *OrderRepository) Orders(ctx context.Context, userID uint64) ([]model.Order, error) {
 	orders := make([]model.Order, 0)
-	rows, err := w.db.QueryContext(ctx, SelectOrderByUserID, userID)
+	rows, err := w.db.QueryContext(ctx, selectOrderByUserID, userID)
 	if err != nil {
 		logger.Log.Error("error query", logger.Err(err))
 		return nil, err
@@ -97,7 +97,7 @@ func (w *OrderRepository) Orders(ctx context.Context, userID uint64) ([]model.Or
 }
 
 func (w *OrderRepository) GetSumOfAccrual(ctx context.Context, userID uint64) (*float32, error) {
-	row := w.db.QueryRowContext(ctx, SelectSumAccrualByUserID, userID)
+	row := w.db.QueryRowContext(ctx, selectSumAccrualByUserID, userID)
 
 	var sum float32
 	if err := row.Scan(&sum); err != nil {
@@ -110,7 +110,7 @@ func (w *OrderRepository) GetSumOfAccrual(ctx context.Context, userID uint64) (*
 
 func (w *OrderRepository) GetOrderByID(ctx context.Context, orderID uint64) (*model.Order, error) {
 	var order model.Order
-	row := w.db.QueryRowContext(ctx, SelectOrderByID, orderID)
+	row := w.db.QueryRowContext(ctx, selectOrderByID, orderID)
 	var err error
 
 	if err = row.Scan(&order.ID, &order.UserID, &order.Number, &order.Status, &order.UploadedAt, &order.Accrual); err != nil {
@@ -128,7 +128,7 @@ func (w *OrderRepository) UpdateStatus(ctx context.Context, orderID uint64, stat
 	}
 	defer tx.Rollback()
 
-	stmt, err := tx.PrepareContext(ctx, UpdateOrderStatus)
+	stmt, err := tx.PrepareContext(ctx, updateOrderStatus)
 	if err != nil {
 		logger.Log.Error("error prepare statement", logger.Err(err))
 		return err
@@ -156,7 +156,7 @@ func (w *OrderRepository) SetAccrual(ctx context.Context, orderID uint64, accrua
 	}
 	defer tx.Rollback()
 
-	stmt, err := tx.PrepareContext(ctx, SetAccrual)
+	stmt, err := tx.PrepareContext(ctx, setAccrual)
 	if err != nil {
 		logger.Log.Error("error prepare statement", logger.Err(err))
 		return err
@@ -178,7 +178,7 @@ func (w *OrderRepository) SetAccrual(ctx context.Context, orderID uint64, accrua
 
 func (w *OrderRepository) GetNOldestNotProcessedOrderIDs(ctx context.Context, limit int) ([]uint64, error) {
 	ids := make([]uint64, 0)
-	rows, err := w.db.QueryContext(ctx, GetNOldestNotProcessedOrderIDs, limit)
+	rows, err := w.db.QueryContext(ctx, getNOldestNotProcessedOrderIDs, limit)
 	if err != nil {
 		logger.Log.Error("error query", logger.Err(err))
 		return nil, err

@@ -15,17 +15,17 @@ type WithdrawRepository struct {
 	db *sql.DB
 }
 
-func NewWitdrawRepository(db *sql.DB) *WithdrawRepository {
+func NewWithdrawRepository(db *sql.DB) *WithdrawRepository {
 	return &WithdrawRepository{
 		db: db,
 	}
 }
 
 const (
-	SelectSumTotalByUserID = `SELECT coalesce(sum(total), 0) as total FROM withdrawns WHERE user_id = $1;`
-	BlockingUserForUpdate  = `SELECT 1 FROM users WHERE id = $1 FOR UPDATE`
-	SelectWithdrawByUserID = `SELECT id, user_id, order_number, total, processed_at FROM withdrawns WHERE user_id = $1 ORDER BY processed_at DESC;`
-	InsertWithdraw         = `
+	selectSumTotalByUserID = `SELECT coalesce(sum(total), 0) as total FROM withdrawns WHERE user_id = $1;`
+	blockingUserForUpdate  = `SELECT 1 FROM users WHERE id = $1 FOR UPDATE`
+	selectWithdrawByUserID = `SELECT id, user_id, order_number, total, processed_at FROM withdrawns WHERE user_id = $1 ORDER BY processed_at DESC;`
+	insertWithdraw         = `
 		WITH o AS (SELECT coalesce(sum(accrual), 0) as total FROM orders WHERE user_id = $1),
         	 w AS (SELECT coalesce(sum(total), 0) as total FROM withdrawns WHERE user_id = $1)
         INSERT INTO withdrawns (user_id, order_number, total)
@@ -40,7 +40,7 @@ var (
 )
 
 func (w *WithdrawRepository) GetSumOfWithdraw(ctx context.Context, userID uint64) (*float32, error) {
-	row := w.db.QueryRowContext(ctx, SelectSumTotalByUserID, userID)
+	row := w.db.QueryRowContext(ctx, selectSumTotalByUserID, userID)
 
 	var sum float32
 	if err := row.Scan(&sum); err != nil {
@@ -51,7 +51,7 @@ func (w *WithdrawRepository) GetSumOfWithdraw(ctx context.Context, userID uint64
 	return &sum, nil
 }
 
-func (w *WithdrawRepository) SaveWitdrawn(ctx context.Context, withdraw model.Withdraw) error {
+func (w *WithdrawRepository) SaveWithdraw(ctx context.Context, withdraw model.Withdraw) error {
 	tx, err := w.db.Begin()
 	if err != nil {
 		return err
@@ -60,7 +60,7 @@ func (w *WithdrawRepository) SaveWitdrawn(ctx context.Context, withdraw model.Wi
 
 	var dummy int
 	err = tx.QueryRowContext(ctx,
-		BlockingUserForUpdate,
+		blockingUserForUpdate,
 		withdraw.UserID,
 	).Scan(&dummy)
 	if err != nil {
@@ -68,7 +68,7 @@ func (w *WithdrawRepository) SaveWitdrawn(ctx context.Context, withdraw model.Wi
 		return err
 	}
 
-	res, err := tx.ExecContext(ctx, InsertWithdraw, withdraw.UserID, withdraw.OrderNumber, withdraw.Total)
+	res, err := tx.ExecContext(ctx, insertWithdraw, withdraw.UserID, withdraw.OrderNumber, withdraw.Total)
 	if err != nil {
 		logger.Log.Error("Error update balance", logger.Err(err))
 		return err
@@ -89,7 +89,7 @@ func (w *WithdrawRepository) SaveWitdrawn(ctx context.Context, withdraw model.Wi
 
 func (w *WithdrawRepository) Withdrawals(ctx context.Context, userID uint64) ([]model.Withdraw, error) {
 	withdrawals := make([]model.Withdraw, 0)
-	rows, err := w.db.QueryContext(ctx, SelectWithdrawByUserID, userID)
+	rows, err := w.db.QueryContext(ctx, selectWithdrawByUserID, userID)
 	if err != nil {
 		logger.Log.Error("error query", logger.Err(err))
 		return nil, err

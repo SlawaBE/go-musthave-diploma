@@ -17,7 +17,7 @@ type UserRepository interface {
 
 type WithdrawRepository interface {
 	GetSumOfWithdraw(ctx context.Context, userID uint64) (*float32, error)
-	SaveWitdrawn(ctx context.Context, withdraw model.Withdraw) error
+	SaveWithdraw(ctx context.Context, withdraw model.Withdraw) error
 	Withdrawals(ctx context.Context, userID uint64) ([]model.Withdraw, error)
 }
 
