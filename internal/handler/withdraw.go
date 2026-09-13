@@ -74,7 +74,7 @@ func (h *WithdrawUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Insufficient funds", http.StatusPaymentRequired)
 		return
 	case IsNotUniqError(err):
-		http.Error(w, "withdraw exists yet", http.StatusInternalServerError)
+		http.Error(w, "withdraw exists yet", http.StatusConflict)
 		return
 	case err != nil:
 		logger.Log.Error("Error update balance", logger.Err(err))
