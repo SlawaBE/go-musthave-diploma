@@ -1,0 +1,7 @@
+DROP INDEX IF EXISTS idx_orders_user_id;
+
+DROP TABLE IF EXISTS orders CASCADE;
+
+DROP SEQUENCE IF EXISTS orders_id_seq CASCADE;
+
+DROP TYPE IF EXISTS order_status CASCADE;
